@@ -1,3 +1,5 @@
+// lib/onboarding/identity_finder_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:personal_branding_app/onboarding/ai_result_screen.dart';
 import 'package:personal_branding_app/providers/onboarding_provider.dart';
@@ -13,21 +15,77 @@ class IdentityFinderScreen extends StatefulWidget {
 class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  // Controller untuk memantau isi field
+  final _whatYouDoController = TextEditingController();
+  final _coreValueController = TextEditingController();
+  final _differentiatorsController = TextEditingController();
+
+  bool _isButtonEnabled = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Tambahkan listener ke setiap controller
+    _whatYouDoController.addListener(_validateFields);
+    _coreValueController.addListener(_validateFields);
+    _differentiatorsController.addListener(_validateFields);
+  }
+
+  void _validateFields() {
+    // Cek apakah ketiga field wajib sudah terisi
+    final isEnabled = _whatYouDoController.text.isNotEmpty &&
+        _coreValueController.text.isNotEmpty &&
+        _differentiatorsController.text.isNotEmpty;
+    // Update state jika ada perubahan
+    if (isEnabled != _isButtonEnabled) {
+      setState(() {
+        _isButtonEnabled = isEnabled;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    // Hapus controller saat widget tidak digunakan
+    _whatYouDoController.dispose();
+    _coreValueController.dispose();
+    _differentiatorsController.dispose();
+    super.dispose();
+  }
+
   void _generate() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      await Provider.of<OnboardingProvider>(context, listen: false).generateIdentity();
-      
-      // Cek apakah ada hasil atau error setelah generate
-      final provider = Provider.of<OnboardingProvider>(context, listen: false);
-      if (provider.aiResponse != null) {
-         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => const AiResultScreen(),
-        ));
-      } else if (provider.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(provider.errorMessage!))
-        );
+
+      setState(() {
+        _isLoading = true; // Mulai loading
+      });
+
+      try {
+        await Provider.of<OnboardingProvider>(context, listen: false)
+            .generateIdentity();
+
+        // Cek provider setelah await selesai
+        final provider =
+            Provider.of<OnboardingProvider>(context, listen: false);
+        if (mounted) {
+          // Pastikan widget masih ada di tree
+          if (provider.aiResponse != null) {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const AiResultScreen(),
+            ));
+          } else if (provider.errorMessage != null) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
+          }
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false; // Hentikan loading
+          });
+        }
       }
     }
   }
@@ -35,72 +93,299 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<OnboardingProvider>(context, listen: false);
+    const purpleColor = Color(0xFF8A53FF);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('FINDER PERSONAL IDENTITY')),
-      body: Consumer<OnboardingProvider>(
-        builder: (context, value, child) {
-          if (value.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildTextField(
-                  label: 'YANG KAMU SUKAI',
-                  hint: '(bikin semangat & ngga ngebosenin)',
-                  onSaved: (val) => provider.whatILove = val!,
-                ),
-                _buildTextField(
-                  label: 'YANG KAMU BISA',
-                  hint: '(skill / kemampuan yang dikuasai)',
-                  onSaved: (val) => provider.whatImGoodAt = val!,
-                ),
-                _buildTextField(
-                  label: 'KENAPA DIBUTUHKAN?',
-                  hint: '(kepentingan & manfaat untuk orang lain)',
-                  onSaved: (val) => provider.whatTheWorldNeeds = val!,
-                ),
-                _buildTextField(
-                  label: 'PELUANG PENGHASILAN (Opsional)',
-                  hint: '(ngga perlu di isi kalau bingung)',
-                  onSaved: (val) => provider.whatICanBePaidFor = val!,
-                  isOptional: true,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _generate,
-                  child: const Text('Generate'),
-                ),
-              ],
+      backgroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80.0),
+        child: AppBar(
+          toolbarHeight: 80.0,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shape: Border(
+            bottom: BorderSide(
+              color: Colors.grey.shade300,
+              width: 1.0,
             ),
-          );
-        },
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'BrandBuilder AI',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.menu, color: Colors.black),
+              onPressed: () {
+                // Fungsi hamburger menu nanti
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(48.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.center, // Rata tengah vertikal
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Business Profile Setup',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'You can not change these later',
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      MouseRegion(
+                        cursor: _isButtonEnabled
+                            ? SystemMouseCursors.click
+                            : SystemMouseCursors.forbidden,
+                        child: ElevatedButton(
+                          onPressed: _isButtonEnabled && !_isLoading
+                              ? _generate
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: purpleColor,
+                            disabledBackgroundColor:
+                                purpleColor.withOpacity(0.5),
+                            disabledForegroundColor:
+                                Colors.white.withOpacity(0.7),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 50, vertical: 25),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Konten asli, visibilitasnya diatur dengan Opacity
+                              Opacity(
+                                opacity: _isLoading ? 0.0 : 1.0,
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Continue',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward, size: 16),
+                                  ],
+                                ),
+                              ),
+                              // Loading indicator, visibilitasnya kebalikan dari konten asli
+                              Opacity(
+                                opacity: _isLoading ? 1.0 : 0.0,
+                                child: const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.0,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 48),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: AnimatedTextField(
+                                controller: _whatYouDoController,
+                                label: 'What You Do',
+                                tooltipMessage:
+                                    'What is it that you do that you want to share?',
+                                onSaved: (val) => provider.whatILove = val!,
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: AnimatedTextField(
+                                controller: _coreValueController,
+                                label: 'Core Value Proposition',
+                                tooltipMessage:
+                                    'What unique problem does your business solve?',
+                                hint:
+                                    'example: "We help e-commerce brands reduce returns with AI fit recommendations"',
+                                onSaved: (val) => provider.whatImGoodAt = val!,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: AnimatedTextField(
+                                label: 'Key Differentiators',
+                                tooltipMessage:
+                                    'List things you do better than competitors',
+                                controller: _differentiatorsController,
+                                onSaved: (val) =>
+                                    provider.whatTheWorldNeeds = val!,
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: AnimatedTextField(
+                                label: 'Revenue Model (Optional)',
+                                onSaved: (val) =>
+                                    provider.whatICanBePaidFor = val!,
+                                isOptional: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
+}
 
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required Function(String?) onSaved,
-    bool isOptional = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+// Widget baru yang stateful untuk menangani animasi field
+class AnimatedTextField extends StatefulWidget {
+  final TextEditingController? controller;
+  final String label;
+  final String? hint;
+  final String? tooltipMessage;
+  final Function(String?) onSaved;
+  final bool isOptional;
+
+  const AnimatedTextField({
+    super.key,
+    this.controller,
+    required this.label,
+    this.hint,
+    this.tooltipMessage,
+    required this.onSaved,
+    this.isOptional = false,
+  });
+
+  @override
+  State<AnimatedTextField> createState() => _AnimatedTextFieldState();
+}
+
+class _AnimatedTextFieldState extends State<AnimatedTextField> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const purpleColor = Color(0xFF8A53FF);
+
+    return Tooltip(
+      message: widget.tooltipMessage ?? '', // <-- Implementasi Tooltip
       child: TextFormField(
-        decoration: InputDecoration(
-          labelText: label,
-          helperText: hint,
-          border: const OutlineInputBorder(),
+        controller: widget.controller,
+        focusNode: _focusNode,
+        style: const TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.w500,
         ),
-        maxLines: 3,
-        onSaved: onSaved,
+        decoration: InputDecoration(
+          labelText: widget.label,
+          hintText: _isFocused ? widget.hint : null,
+          hintStyle: const TextStyle(fontSize: 11),
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(
+              color: purpleColor,
+              width: 2.0,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(
+              color: Colors.red,
+              width: 1.0,
+            ),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(
+              color: Colors.red,
+              width: 2.0,
+            ),
+          ),
+        ),
+        onSaved: widget.onSaved,
         validator: (value) {
-          if (!isOptional && value!.isEmpty) {
-            return 'Field ini tidak boleh kosong';
+          if (!widget.isOptional && (value == null || value.isEmpty)) {
+            return 'Wajib diisi';
           }
           return null;
         },
