@@ -1,7 +1,11 @@
+// lib/onboarding/selection_screen.dart
+
 import 'package:flutter/material.dart';
+import 'package:personal_branding_app/widgets/custom_app_bar.dart';
 
 class SelectionScreen extends StatefulWidget {
   final String title;
+  final String subtitle;
   final List<String> options;
   final Function(String) onSelect;
   final VoidCallback onNext;
@@ -9,6 +13,7 @@ class SelectionScreen extends StatefulWidget {
   const SelectionScreen({
     super.key,
     required this.title,
+    required this.subtitle,
     required this.options,
     required this.onSelect,
     required this.onNext,
@@ -23,32 +28,168 @@ class _SelectionScreenState extends State<SelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const purpleColor = Color(0xFF8A53FF);
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: ListView.builder(
-        itemCount: widget.options.length,
-        itemBuilder: (context, index) {
-          final option = widget.options[index];
-          return RadioListTile<String>(
-            title: Text(option),
-            value: option,
-            groupValue: _selectedValue,
-            onChanged: (value) {
-              setState(() {
-                _selectedValue = value;
-              });
-              if (value != null) {
-                widget.onSelect(value);
-              }
-            },
-          );
-        },
+      backgroundColor: Colors.white,
+      appBar: const CustomAppBar(
+        title: 'BrandBuilder AI',
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton(
-          child: const Text('Next'),
-          onPressed: _selectedValue != null ? widget.onNext : null,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(48.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.subtitle,
+                              style: TextStyle(
+                                  color: Colors.grey.shade600, fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed:
+                            _selectedValue != null ? widget.onNext : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: purpleColor,
+                          disabledBackgroundColor: Colors.grey.shade200,
+                          disabledForegroundColor: Colors.grey.shade400,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 22),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Continue',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ), 
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, size: 16),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 48),
+                  // Menggunakan Wrap untuk tata letak chip yang fleksibel
+                  Wrap(
+                    spacing: 16.0, // Jarak horizontal antar chip
+                    runSpacing: 16.0, // Jarak vertikal antar baris chip
+                    children: widget.options.map((option) {
+                      final isSelected = _selectedValue == option;
+                      // Menggunakan widget kustom baru
+                      return HoverAnimatedChip(
+                        label: option,
+                        isSelected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedValue = selected ? option : null;
+                          });
+                          if (_selectedValue != null) {
+                            widget.onSelect(_selectedValue!);
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- WIDGET BARU UNTUK CHIP DENGAN ANIMASI HOVER ---
+class HoverAnimatedChip extends StatefulWidget {
+  final String label;
+  final bool isSelected;
+  final Function(bool) onSelected;
+
+  const HoverAnimatedChip({
+    super.key,
+    required this.label,
+    required this.isSelected,
+    required this.onSelected,
+  });
+
+  @override
+  State<HoverAnimatedChip> createState() => _HoverAnimatedChipState();
+}
+
+class _HoverAnimatedChipState extends State<HoverAnimatedChip> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    const purpleColor = Color(0xFF8A53FF);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedScale(
+        scale: _isHovered ? 1.02 : 1.0, // Membesar 5% saat di-hover
+        duration: const Duration(milliseconds: 200),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            // Menghilangkan efek warna abu-abu saat di-hover atau ditekan
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+          ),
+          child: ChoiceChip(
+            label: Text(widget.label),
+            selected: widget.isSelected,
+            onSelected: widget.onSelected,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+            labelStyle: TextStyle(
+              color: widget.isSelected ? purpleColor : Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+            selectedColor: Colors.grey.shade100,
+            backgroundColor: Colors.white,
+            side: BorderSide(
+              color: widget.isSelected ? purpleColor : Colors.grey.shade300,
+              width: 1.5,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            showCheckmark: false,
+            pressElevation: 0,
+          ),
         ),
       ),
     );

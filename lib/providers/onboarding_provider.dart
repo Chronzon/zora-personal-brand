@@ -224,16 +224,21 @@ KELEMAHAN SAYA: $weaknesses
 PELUANG YANG ADA: $opportunities
 ANCAMAN YANG ADA: $threats
 
-Dari analisis ini, buatkan premis personal branding dalam format seperti berikut:
+--- LANGKAH 1: PEMBUATAN KALIMAT INTI (Lakukan ini di dalam pikiranmu) ---
+
+Pertama, buat 10 variasi kalimat inti. 
+Pastikan premis ini menarik, mudah dipahami, dan menggugah emosi audiens agar mereka bisa merasa terhubung dengan perjalanan saya.
+
+Contoh kalimat inti:
+
 'Dari "$weaknesses", akhirnya "$finalStrengths", dan kini "$opportunities".'
 
 ATAU
 
 'Dari "$threats" menjadi "$finalStrengths", saya percaya bahwa "$opportunities", dan saya ingin "$opportunities".'
 
-Pastikan premis ini menarik, mudah dipahami, dan menggugah emosi audiens agar mereka bisa merasa terhubung dengan perjalanan saya.
-Berikan 10 pilihan premis agar saya memiliki lebih banyak ide dan lebih mengenal diri saya.
-JAWAB HANYA DALAM FORMAT SEPERTI CONTOH DI BAWAH. JANGAN UBAH STRUKTURNYA.
+--- LANGKAH 2: FORMAT JAWABAN AKHIR ---
+Setelah kamu memiliki 10 kalimat inti dari Langkah 1, sekarang format jawabanmu persis seperti contoh di bawah.
 
 --- CONTOH FORMAT JAWABAN ---
 Berikut adalah 10 pilihan premis personal branding yang bisa kamu gunakan:

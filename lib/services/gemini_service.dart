@@ -1,13 +1,12 @@
-// lib/services/gemini_service.dart
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiService {
-  // GANTI DENGAN API KEY ANDA
-  static const String _apiKey = 'AIzaSyD54GRWhjxgETd7stxPUaIVkCKJtx-BwXk';
+  // Ambil API Key dari .env. App akan error jika tidak ditemukan.
+  static final String _apiKey = dotenv.env['GEMINI_API_KEY']!;
 
   final GenerativeModel _model = GenerativeModel(
-    model: 'gemini-1.5-flash',
+    model: 'gemini-flash-latest',
     apiKey: _apiKey,
   );
 

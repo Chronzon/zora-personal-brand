@@ -1,7 +1,8 @@
 // lib/onboarding/identity_finder_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:personal_branding_app/onboarding/ai_result_screen.dart';
+import 'package:personal_branding_app/onboarding/selection_screen.dart';
+import 'package:personal_branding_app/onboarding/swot_screen.dart';
 import 'package:personal_branding_app/providers/onboarding_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -14,7 +15,7 @@ class IdentityFinderScreen extends StatefulWidget {
 
 class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
   final _formKey = GlobalKey<FormState>();
-
+  
   // Controller untuk memantau isi field
   final _whatYouDoController = TextEditingController();
   final _coreValueController = TextEditingController();
@@ -35,8 +36,8 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
   void _validateFields() {
     // Cek apakah ketiga field wajib sudah terisi
     final isEnabled = _whatYouDoController.text.isNotEmpty &&
-        _coreValueController.text.isNotEmpty &&
-        _differentiatorsController.text.isNotEmpty;
+                      _coreValueController.text.isNotEmpty &&
+                      _differentiatorsController.text.isNotEmpty;
     // Update state jika ada perubahan
     if (isEnabled != _isButtonEnabled) {
       setState(() {
@@ -57,28 +58,62 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
   void _generate() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
+      
       setState(() {
         _isLoading = true; // Mulai loading
       });
 
       try {
-        await Provider.of<OnboardingProvider>(context, listen: false)
-            .generateIdentity();
-
-        // Cek provider setelah await selesai
-        final provider =
-            Provider.of<OnboardingProvider>(context, listen: false);
+        await Provider.of<OnboardingProvider>(context, listen: false).generateIdentity();
+        
+        final provider = Provider.of<OnboardingProvider>(context, listen: false);
         if (mounted) {
-          // Pastikan widget masih ada di tree
-          if (provider.aiResponse != null) {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => const AiResultScreen(),
-            ));
-          } else if (provider.errorMessage != null) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
-          }
+            if (provider.aiResponse != null && provider.profileNameOptions.isNotEmpty) {
+              // --- PERUBAHAN DI SINI: LANGSUNG NAVIGASI KE SELECTION SCREEN ---
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => SelectionScreen(
+                  title: 'Pick your profile name',
+                  subtitle: 'Choose a name that best represents your brand. This will be your identity.',
+                  options: provider.profileNameOptions,
+                  onSelect: (value) {
+                    provider.selectedProfileName = value;
+                  },
+                  onNext: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => SelectionScreen(
+                        title: 'Select a Category',
+                        subtitle: 'This will define the general area of your content.',
+                        options: provider.categoryOptions,
+                        onSelect: (value) {
+                          provider.selectedCategory = value;
+                        },
+                        onNext: () {
+                           Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => SelectionScreen(
+                              title: 'Choose a Micro-Niche',
+                              subtitle: 'Get specific! This is where you\'ll stand out.',
+                              options: provider.microNicheOptions,
+                              onSelect: (value) {
+                                provider.selectedMicroNiche = value;
+                              },
+                              onNext: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => const SwotScreen(),
+                                ));
+                              },
+                            ),
+                          ));
+                        },
+                      ),
+                    ));
+                  },
+                ),
+              ));
+            } else if (provider.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(provider.errorMessage!))
+              );
+            }
         }
       } finally {
         if (mounted) {
@@ -142,8 +177,7 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment:
-                        CrossAxisAlignment.center, // Rata tengah vertikal
+                    crossAxisAlignment: CrossAxisAlignment.center, // Rata tengah vertikal
                     children: [
                       const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,28 +191,23 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'You can not change these later',
+                            'You can always change these later',
                             style: TextStyle(color: Colors.grey, fontSize: 16),
                           ),
                         ],
                       ),
                       MouseRegion(
-                        cursor: _isButtonEnabled
-                            ? SystemMouseCursors.click
-                            : SystemMouseCursors.forbidden,
+                        cursor: _isButtonEnabled && !_isLoading
+                                ? SystemMouseCursors.click 
+                                : SystemMouseCursors.forbidden,
                         child: ElevatedButton(
-                          onPressed: _isButtonEnabled && !_isLoading
-                              ? _generate
-                              : null,
+                          onPressed: _isButtonEnabled && !_isLoading ? _generate : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: purpleColor,
-                            disabledBackgroundColor:
-                                purpleColor.withOpacity(0.5),
-                            disabledForegroundColor:
-                                Colors.white.withOpacity(0.7),
+                            disabledBackgroundColor: Colors.grey.shade200,
+                            disabledForegroundColor: Colors.grey.shade400,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 50, vertical: 25),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -186,7 +215,6 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              // Konten asli, visibilitasnya diatur dengan Opacity
                               Opacity(
                                 opacity: _isLoading ? 0.0 : 1.0,
                                 child: const Row(
@@ -204,7 +232,6 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                                   ],
                                 ),
                               ),
-                              // Loading indicator, visibilitasnya kebalikan dari konten asli
                               Opacity(
                                 opacity: _isLoading ? 1.0 : 0.0,
                                 child: const SizedBox(
@@ -234,8 +261,7 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                               child: AnimatedTextField(
                                 controller: _whatYouDoController,
                                 label: 'What You Do',
-                                tooltipMessage:
-                                    'What is it that you do that you want to share?',
+                                tooltipMessage: 'What is it that you do that you want to share?',
                                 onSaved: (val) => provider.whatILove = val!,
                               ),
                             ),
@@ -244,10 +270,8 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                               child: AnimatedTextField(
                                 controller: _coreValueController,
                                 label: 'Core Value Proposition',
-                                tooltipMessage:
-                                    'What unique problem does your business solve?',
-                                hint:
-                                    'example: "We help e-commerce brands reduce returns with AI fit recommendations"',
+                                tooltipMessage: 'What unique problem does your business solve?',
+                                hint: 'example: "We help e-commerce brands reduce returns with AI fit recommendations"',
                                 onSaved: (val) => provider.whatImGoodAt = val!,
                               ),
                             ),
@@ -259,20 +283,17 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                           children: [
                             Expanded(
                               child: AnimatedTextField(
-                                label: 'Key Differentiators',
-                                tooltipMessage:
-                                    'List things you do better than competitors',
                                 controller: _differentiatorsController,
-                                onSaved: (val) =>
-                                    provider.whatTheWorldNeeds = val!,
+                                label: 'Key Differentiators',
+                                tooltipMessage: 'List things you do better than competitors',
+                                onSaved: (val) => provider.whatTheWorldNeeds = val!,
                               ),
                             ),
                             const SizedBox(width: 24),
                             Expanded(
                               child: AnimatedTextField(
                                 label: 'Revenue Model (Optional)',
-                                onSaved: (val) =>
-                                    provider.whatICanBePaidFor = val!,
+                                onSaved: (val) => provider.whatICanBePaidFor = val!,
                                 isOptional: true,
                               ),
                             ),
@@ -339,7 +360,7 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
     const purpleColor = Color(0xFF8A53FF);
 
     return Tooltip(
-      message: widget.tooltipMessage ?? '', // <-- Implementasi Tooltip
+      message: widget.tooltipMessage ?? '',
       child: TextFormField(
         controller: widget.controller,
         focusNode: _focusNode,
@@ -350,12 +371,11 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
         decoration: InputDecoration(
           labelText: widget.label,
           hintText: _isFocused ? widget.hint : null,
-          hintStyle: const TextStyle(fontSize: 11),
+          hintStyle: const TextStyle(fontSize: 10),
           floatingLabelBehavior: FloatingLabelBehavior.auto,
           filled: true,
           fillColor: Colors.grey.shade100,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
