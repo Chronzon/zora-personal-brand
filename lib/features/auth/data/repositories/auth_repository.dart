@@ -1,5 +1,6 @@
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -47,42 +48,50 @@ class AuthRepository {
     await _supabase.auth.signOut();
   }
 
-  Future<AuthResponse> signInWithGoogle() async {
+  Future<bool> signInWithGoogle() async {
     try {
-      // 1. Trigger Login Google Native (Android Dialog muncul)
-      // PENTING: Ganti WEB_CLIENT_ID dengan Client ID dari TAHAP 2A
-      const webClientId =
-          '746741768835-enftvpsh4f0tolp10fu9lsdk4vnp3p0g.apps.googleusercontent.com';
+      // --- JALUR 1: KHUSUS WEB (Chrome) ---
+      if (kIsWeb) {
+        // GANTI: Provider.google -> OAuthProvider.google
+        return await _supabase.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: 'http://localhost:3000/callback',
+        );
+      } 
+      
+      // --- JALUR 2: KHUSUS MOBILE (Android/iOS) ---
+      else {
+        const webClientId = '746741768835-enftvpsh4f0tolp10fu9lsdk4vnp3p0g.apps.googleusercontent.com';
 
-      // Android Client ID tidak perlu dimasukkan di kodingan,
-      // Google mendeteksinya otomatis lewat SHA-1 package name.
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          serverClientId: webClientId,
+        );
 
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: webClientId,
-      );
+        final googleUser = await googleSignIn.signIn();
+        final googleAuth = await googleUser?.authentication;
 
-      final googleUser = await googleSignIn.signIn();
-      final googleAuth = await googleUser?.authentication;
+        if (googleAuth == null) {
+          throw 'Google Sign In dibatalkan oleh user.';
+        }
 
-      if (googleAuth == null) {
-        throw 'Google Sign In dibatalkan oleh user.';
+        final accessToken = googleAuth.accessToken;
+        final idToken = googleAuth.idToken;
+
+        if (idToken == null) {
+          throw 'No ID Token found.';
+        }
+
+        final response = await _supabase.auth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        );
+        
+        // Kita kembalikan true jika session berhasil dibuat
+        return response.session != null;
       }
-
-      final accessToken = googleAuth.accessToken;
-      final idToken = googleAuth.idToken;
-
-      if (idToken == null) {
-        throw 'No ID Token found.';
-      }
-
-      // 2. Kirim Token ke Supabase
-      return await _supabase.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: idToken,
-        accessToken: accessToken,
-      );
     } catch (e) {
-      print("ERROR GOOGLE SIGN IN: $e"); // <--- Tambahkan Log ini
+      print("ERROR GOOGLE SIGN IN: $e");
       throw _handleError(e);
     }
   }
