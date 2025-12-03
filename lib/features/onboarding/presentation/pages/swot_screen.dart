@@ -112,18 +112,18 @@ class _SwotScreenState extends State<SwotScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (isMobile)
-                      Column(
+                      const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'PERSONAL DETECTOR INTELLIGENCE',
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
+                          SizedBox(height: 8),
+                          Text(
                             'Analyze your strengths and challenges to build a solid foundation.',
                             style: TextStyle(color: Colors.grey, fontSize: 16),
                           ),

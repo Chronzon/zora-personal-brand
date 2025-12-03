@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:personal_branding_app/features/content_creation/presentation/providers/content_creation_provider.dart';
 import 'package:personal_branding_app/features/dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/language_screen.dart';
-import 'package:personal_branding_app/features/onboarding/presentation/pages/name_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -38,18 +37,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (mounted) {
         if (hasData) {
+          // 1. Data Lengkap -> Ke Dashboard
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const DashboardScreen()),
           );
         } else {
-          // Session ada tapi data korup/hilang -> Tetap ke NameScreen untuk isi data
+          // 2. Session Ada TAPI Data Belum Lengkap (User Gantung/Belum Selesai Onboarding)
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const NameScreen()),
+            MaterialPageRoute(builder: (_) => const LanguageScreen()),
           );
         }
       }
     } else {
-      // 2. UBAH BAGIAN INI: User Baru -> Arahkan ke WelcomeScreen
+      // 3. User Baru (Belum Login) -> Ke LanguageScreen
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const LanguageScreen()),

@@ -5,12 +5,15 @@ import '../models/content_factory_item.dart';
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ContentCreationRepository {
+import 'package:personal_branding_app/features/content_creation/domain/repositories/content_creation_repository.dart';
+
+class ContentCreationRepositoryImpl implements ContentCreationRepository {
   final GeminiService _geminiService;
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
 
-  ContentCreationRepository(this._geminiService);
+  ContentCreationRepositoryImpl(this._supabase, this._geminiService);
 
+  @override
   Future<Map<String, dynamic>> generateContentIdeas({
     required String pillar,
     required int ideaCount,
@@ -28,8 +31,8 @@ class ContentCreationRepository {
     };
 
     try {
-      final result =
-          await _geminiService.generateContent('generate_ideas', payload, languageCode);
+      final result = await _geminiService.generateContent(
+          'generate_ideas', payload, languageCode);
 
       if (result != null) {
         // Try to parse as JSON
@@ -92,6 +95,7 @@ class ContentCreationRepository {
   }
 
   // 1. Simpan Script ke Database
+  @override
   Future<void> saveGeneratedScript(GeneratedScript script) async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
@@ -103,6 +107,7 @@ class ContentCreationRepository {
   }
 
   // 2. Ambil Semua Script milik User
+  @override
   Future<List<GeneratedScript>> getGeneratedScripts() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return [];
@@ -124,10 +129,12 @@ class ContentCreationRepository {
   }
 
   // 3. Hapus Script
+  @override
   Future<void> deleteGeneratedScript(String scriptId) async {
     await _supabase.from('generated_scripts').delete().eq('id', scriptId);
   }
 
+  @override
   Future<String> generateScript({
     required ContentIdea idea,
     required String platform,
@@ -147,8 +154,8 @@ class ContentCreationRepository {
     };
 
     try {
-      final result =
-          await _geminiService.generateContent('generate_script', payload, languageCode);
+      final result = await _geminiService.generateContent(
+          'generate_script', payload, languageCode);
 
       if (result != null) {
         return result;

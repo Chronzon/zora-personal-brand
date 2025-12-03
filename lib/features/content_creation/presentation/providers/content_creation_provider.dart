@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../data/models/content_factory_item.dart';
-import '../../data/models/generated_script.dart';
-import '../../data/repositories/content_creation_repository.dart';
-import '../../../onboarding/presentation/providers/onboarding_provider.dart';
-import '../../../onboarding/data/models/brand_profile.dart';
+import 'package:personal_branding_app/features/content_creation/data/models/content_factory_item.dart';
+import 'package:personal_branding_app/features/content_creation/data/models/generated_script.dart';
+import 'package:personal_branding_app/features/content_creation/domain/repositories/content_creation_repository.dart';
+import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
+import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class ContentCreationProvider extends ChangeNotifier {

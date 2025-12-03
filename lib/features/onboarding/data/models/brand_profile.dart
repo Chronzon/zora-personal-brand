@@ -55,4 +55,36 @@ class BrandProfile {
       contentPillars: contentPillars ?? this.contentPillars,
     );
   }
+
+  factory BrandProfile.fromJson(Map<String, dynamic> json) {
+    return BrandProfile(
+      selectedProfileName: json['selected_profile_name'],
+      selectedCategory: json['selected_category'],
+      selectedMicroNiche: json['selected_micro_niche'],
+      selectedPremise: json['selected_premise'],
+      toneOfVoice: json['tone_of_voice'],
+      targetAudience: json['target_audience'] ?? '',
+      strengths: json['strengths'] ?? '',
+      weaknesses: json['weaknesses'] ?? '',
+      opportunities: json['opportunities'] ?? '',
+      threats: json['threats'] ?? '',
+      contentPillars: List<String>.from(json['content_pillars'] ?? []),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'selected_profile_name': selectedProfileName,
+      'selected_category': selectedCategory,
+      'selected_micro_niche': selectedMicroNiche,
+      'selected_premise': selectedPremise,
+      'tone_of_voice': toneOfVoice,
+      'target_audience': targetAudience,
+      'strengths': strengths,
+      'weaknesses': weaknesses,
+      'opportunities': opportunities,
+      'threats': threats,
+      'content_pillars': contentPillars,
+    };
+  }
 }

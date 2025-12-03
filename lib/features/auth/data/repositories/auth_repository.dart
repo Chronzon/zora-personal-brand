@@ -2,13 +2,19 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
-class AuthRepository {
-  final SupabaseClient _supabase = Supabase.instance.client;
+import 'package:personal_branding_app/features/auth/domain/repositories/auth_repository.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
+  final SupabaseClient _supabase;
+
+  AuthRepositoryImpl(this._supabase);
 
   // Mendapatkan user saat ini (Session)
+  @override
   User? get currentUser => _supabase.auth.currentUser;
 
   // Login dengan Email & Password
+  @override
   Future<AuthResponse> signIn({
     required String email,
     required String password,
@@ -24,6 +30,7 @@ class AuthRepository {
   }
 
   // Register dengan Email, Password, & Nama Lengkap
+  @override
   Future<AuthResponse> signUp({
     required String email,
     required String password,
@@ -44,10 +51,12 @@ class AuthRepository {
   }
 
   // Logout
+  @override
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
 
+  @override
   Future<bool> signInWithGoogle() async {
     try {
       // --- JALUR 1: KHUSUS WEB (Chrome) ---
@@ -57,11 +66,12 @@ class AuthRepository {
           OAuthProvider.google,
           redirectTo: 'http://localhost:3000/callback',
         );
-      } 
-      
+      }
+
       // --- JALUR 2: KHUSUS MOBILE (Android/iOS) ---
       else {
-        const webClientId = '746741768835-enftvpsh4f0tolp10fu9lsdk4vnp3p0g.apps.googleusercontent.com';
+        const webClientId =
+            '746741768835-enftvpsh4f0tolp10fu9lsdk4vnp3p0g.apps.googleusercontent.com';
 
         final GoogleSignIn googleSignIn = GoogleSignIn(
           serverClientId: webClientId,
@@ -86,7 +96,7 @@ class AuthRepository {
           idToken: idToken,
           accessToken: accessToken,
         );
-        
+
         // Kita kembalikan true jika session berhasil dibuat
         return response.session != null;
       }

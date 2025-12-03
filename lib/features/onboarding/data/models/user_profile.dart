@@ -28,4 +28,24 @@ class UserProfile {
       whatICanBePaidFor: whatICanBePaidFor ?? this.whatICanBePaidFor,
     );
   }
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      fullName: json['full_name'] ?? '',
+      whatILove: json['what_i_love'] ?? '',
+      whatImGoodAt: json['what_im_good_at'] ?? '',
+      whatTheWorldNeeds: json['what_the_world_needs'] ?? '',
+      whatICanBePaidFor: json['what_i_can_be_paid_for'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'full_name': fullName,
+      'what_i_love': whatILove,
+      'what_im_good_at': whatImGoodAt,
+      'what_the_world_needs': whatTheWorldNeeds,
+      'what_i_can_be_paid_for': whatICanBePaidFor,
+    };
+  }
 }

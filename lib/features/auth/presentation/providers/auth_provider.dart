@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:personal_branding_app/features/auth/data/repositories/auth_repository.dart';
+import 'package:personal_branding_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -9,7 +9,7 @@ class AuthProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
-  
+
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -32,7 +32,8 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signUp(String email, String password, String fullName) async {
     _setLoading(true);
     try {
-      await _repository.signUp(email: email, password: password, fullName: fullName);
+      await _repository.signUp(
+          email: email, password: password, fullName: fullName);
       _setLoading(false);
       return true; // Sukses
     } catch (e) {

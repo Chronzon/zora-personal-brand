@@ -3,14 +3,16 @@ import 'dart:convert';
 import 'package:personal_branding_app/core/services/gemini_service.dart';
 import 'package:personal_branding_app/features/onboarding/data/models/user_profile.dart';
 import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
+import 'package:personal_branding_app/features/onboarding/domain/repositories/onboarding_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class OnboardingRepository {
+class OnboardingRepositoryImpl implements OnboardingRepository {
   final GeminiService _geminiService;
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
 
-  OnboardingRepository(this._geminiService);
+  OnboardingRepositoryImpl(this._supabase, this._geminiService);
 
+  @override
   Future<void> saveUserProfile(UserProfile profile) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
@@ -19,44 +21,32 @@ class OnboardingRepository {
 
     final userId = _supabase.auth.currentUser!.id;
 
-    await _supabase.from('user_profiles').upsert({
-      'user_id': userId,
-      'full_name': profile.fullName,
-      'what_i_love': profile.whatILove,
-      'what_im_good_at': profile.whatImGoodAt,
-      'what_the_world_needs': profile.whatTheWorldNeeds,
-      'what_i_can_be_paid_for': profile.whatICanBePaidFor,
-      'updated_at': DateTime.now().toIso8601String(),
-    });
+    await _supabase.from('user_profiles').upsert(
+      {
+        'user_id': userId,
+        ...profile.toJson(),
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      onConflict: 'user_id',
+    );
   }
 
-  // Di dalam OnboardingRepository
-
+  @override
   Future<void> saveBrandProfile(BrandProfile profile) async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
-    // --- PERBAIKAN DI SINI ---
     await _supabase.from('brand_profiles').upsert(
       {
         'user_id': user.id,
-        'selected_profile_name': profile.selectedProfileName,
-        'selected_category': profile.selectedCategory,
-        'selected_micro_niche': profile.selectedMicroNiche,
-        'selected_premise': profile.selectedPremise,
-        'tone_of_voice': profile.toneOfVoice,
-        'target_audience': profile.targetAudience,
-        'strengths': profile.strengths,
-        'weaknesses': profile.weaknesses,
-        'opportunities': profile.opportunities,
-        'threats': profile.threats,
-        'content_pillars': profile.contentPillars,
+        ...profile.toJson(),
         'updated_at': DateTime.now().toIso8601String(),
       },
-      onConflict: 'user_id', // <--- TAMBAHKAN BARIS INI PENTING!
+      onConflict: 'user_id',
     );
   }
 
+  @override
   Future<UserProfile?> getUserProfile() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return null;
@@ -66,24 +56,18 @@ class OnboardingRepository {
           .from('user_profiles')
           .select()
           .eq('user_id', user.id)
-          .maybeSingle(); // maybeSingle mengembalikan null jika tidak ada data
+          .maybeSingle();
 
       if (data == null) return null;
 
-      return UserProfile(
-        fullName: data['full_name'] ?? '',
-        whatILove: data['what_i_love'] ?? '',
-        whatImGoodAt: data['what_im_good_at'] ?? '',
-        whatTheWorldNeeds: data['what_the_world_needs'] ?? '',
-        whatICanBePaidFor: data['what_i_can_be_paid_for'] ?? '',
-      );
+      return UserProfile.fromJson(data);
     } catch (e) {
       print("Error fetching user profile: $e");
       return null;
     }
   }
 
-// Ambil data Brand Profile
+  @override
   Future<BrandProfile?> getBrandProfile() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return null;
@@ -97,26 +81,16 @@ class OnboardingRepository {
 
       if (data == null) return null;
 
-      return BrandProfile(
-        selectedProfileName: data['selected_profile_name'],
-        selectedCategory: data['selected_category'],
-        selectedMicroNiche: data['selected_micro_niche'],
-        selectedPremise: data['selected_premise'],
-        toneOfVoice: data['tone_of_voice'],
-        targetAudience: data['target_audience'] ?? '',
-        strengths: data['strengths'] ?? '',
-        weaknesses: data['weaknesses'] ?? '',
-        opportunities: data['opportunities'] ?? '',
-        contentPillars: List<String>.from(data['content_pillars'] ?? []),
-        threats: data['threats'] ?? '',
-      );
+      return BrandProfile.fromJson(data);
     } catch (e) {
       print("Error fetching brand profile: $e");
       return null;
     }
   }
 
-  Future<Map<String, dynamic>> generateIdentity(UserProfile profile, String languageCode) async {
+  @override
+  Future<Map<String, dynamic>> generateIdentity(
+      UserProfile profile, String languageCode) async {
     await saveUserProfile(profile);
 
     final payload = {
@@ -127,8 +101,8 @@ class OnboardingRepository {
       'whatICanBePaidFor': profile.whatICanBePaidFor,
     };
 
-    final result =
-        await _geminiService.generateContent('generate_identity', payload, languageCode);
+    final result = await _geminiService.generateContent(
+        'generate_identity', payload, languageCode);
     if (result == null || result.isEmpty) {
       throw Exception("Gagal mendapatkan respons dari AI.");
     }
@@ -165,6 +139,7 @@ class OnboardingRepository {
     }
   }
 
+  @override
   Future<Map<String, dynamic>> generatePremise({
     required UserProfile userProfile,
     required BrandProfile brandProfile,
@@ -185,8 +160,8 @@ class OnboardingRepository {
       'userStrengths': userProfile.whatImGoodAt,
     };
 
-    final result =
-        await _geminiService.generateContent('generate_premise', payload, languageCode);
+    final result = await _geminiService.generateContent(
+        'generate_premise', payload, languageCode);
     if (result == null || result.isEmpty) {
       throw Exception("Gagal mendapatkan respons dari AI.");
     }
@@ -228,6 +203,7 @@ class OnboardingRepository {
     };
   }
 
+  @override
   Future<Map<String, dynamic>> generateContentPillars({
     required BrandProfile brandProfile,
     required String languageCode,
@@ -243,8 +219,8 @@ class OnboardingRepository {
       'selectedPremise': brandProfile.selectedPremise,
     };
 
-    final result =
-        await _geminiService.generateContent('generate_pillars', payload, languageCode);
+    final result = await _geminiService.generateContent(
+        'generate_pillars', payload, languageCode);
     if (result == null || result.isEmpty) {
       throw Exception("Gagal mendapatkan respons dari AI.");
     }

@@ -9,7 +9,8 @@ import 'package:personal_branding_app/features/onboarding/presentation/providers
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool showBackButton;
+  const LoginScreen({super.key, this.showBackButton = false});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -170,19 +171,20 @@ class _LoginScreenState extends State<LoginScreen> {
               }
             },
           ),
-          Positioned(
-            top: 16, // Sesuaikan dengan SafeArea
-            left: 16,
-            child: SafeArea(
-              child: CircleAvatar(
-                backgroundColor: Colors.white, // Background putih biar jelas
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                  onPressed: () => Navigator.pop(context),
+          if (widget.showBackButton)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: SafeArea(
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:personal_branding_app/core/services/gemini_service.dart';
+
 import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
 import 'package:personal_branding_app/features/onboarding/data/models/user_profile.dart';
-import 'package:personal_branding_app/features/onboarding/data/repositories/onboarding_repository.dart';
+import 'package:personal_branding_app/features/onboarding/domain/repositories/onboarding_repository.dart';
 
 class OnboardingProvider extends ChangeNotifier {
   final OnboardingRepository _repository;
@@ -29,7 +29,7 @@ class OnboardingProvider extends ChangeNotifier {
   String? premiseAiResponse;
   String? pillarAiResponse;
 
-  OnboardingProvider() : _repository = OnboardingRepository(GeminiService());
+  OnboardingProvider(this._repository);
 
   // Getters
   UserProfile get userProfile => _userProfile;
@@ -156,7 +156,8 @@ class OnboardingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _repository.generateIdentity(_userProfile, languageCode);
+      final result =
+          await _repository.generateIdentity(_userProfile, languageCode);
       aiResponse = result['aiResponse'];
       profileNameOptions = List<String>.from(result['profileNames']);
       categoryOptions = List<String>.from(result['categories']);
