@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../pages/login_screen.dart';
+import 'package:personal_branding_app/features/auth/presentation/pages/login_screen.dart';
 
 enum AuthTriggerType {
   fearOfLoss, // "Simpan data sebelum hilang"

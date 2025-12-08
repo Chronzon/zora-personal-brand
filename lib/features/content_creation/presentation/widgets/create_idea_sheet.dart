@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:personal_branding_app/features/auth/presentation/pages/widgets/auth_trigger_sheet.dart';
+import 'package:personal_branding_app/features/auth/presentation/widgets/auth_trigger_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../onboarding/presentation/providers/onboarding_provider.dart';

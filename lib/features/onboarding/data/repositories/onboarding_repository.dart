@@ -1,146 +1,149 @@
 import 'dart:convert';
-
-import 'package:personal_branding_app/core/services/gemini_service.dart';
-import 'package:personal_branding_app/features/onboarding/data/models/user_profile.dart';
-import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
-import 'package:personal_branding_app/features/onboarding/domain/repositories/onboarding_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class OnboardingRepositoryImpl implements OnboardingRepository {
-  final GeminiService _geminiService;
+import 'package:personal_branding_app/core/utils/result.dart';
+import 'package:personal_branding_app/core/errors/failures.dart';
+import 'package:personal_branding_app/core/errors/error_handler.dart';
+import 'package:personal_branding_app/core/errors/exceptions.dart';
+import 'package:personal_branding_app/core/services/i_ai_service.dart';
+
+import 'package:personal_branding_app/features/onboarding/data/models/user_profile.dart';
+import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
+import '../../domain/repositories/i_onboarding_repository.dart';
+
+class OnboardingRepositoryImpl implements IOnboardingRepository {
   final SupabaseClient _supabase;
+  final IAIService _aiService;
 
-  OnboardingRepositoryImpl(this._supabase, this._geminiService);
-
-  @override
-  Future<void> saveUserProfile(UserProfile profile) async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) {
-      await _supabase.auth.signInAnonymously();
-    }
-
-    final userId = _supabase.auth.currentUser!.id;
-
-    await _supabase.from('user_profiles').upsert(
-      {
-        'user_id': userId,
-        ...profile.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
-      },
-      onConflict: 'user_id',
-    );
-  }
+  OnboardingRepositoryImpl(this._supabase, this._aiService);
 
   @override
-  Future<void> saveBrandProfile(BrandProfile profile) async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return;
-
-    await _supabase.from('brand_profiles').upsert(
-      {
-        'user_id': user.id,
-        ...profile.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
-      },
-      onConflict: 'user_id',
-    );
-  }
-
-  @override
-  Future<UserProfile?> getUserProfile() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return null;
-
+  Future<Result<UserProfile, Failure>> getUserProfile() async {
     try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) {
+        // Jika belum ada user auth, kembalikan profile kosong (New User)
+        return Success(UserProfile());
+      }
+
       final data = await _supabase
           .from('user_profiles')
           .select()
           .eq('user_id', user.id)
           .maybeSingle();
 
-      if (data == null) return null;
-
-      return UserProfile.fromJson(data);
+      if (data == null) {
+        return Success(UserProfile());
+      }
+      return Success(UserProfile.fromJson(data));
     } catch (e) {
-      print("Error fetching user profile: $e");
-      return null;
+      return ResultFailure(ErrorHandler.handleException(e));
     }
   }
 
   @override
-  Future<BrandProfile?> getBrandProfile() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return null;
-
+  Future<Result<void, Failure>> saveUserProfile(UserProfile profile) async {
     try {
+      var user = _supabase.auth.currentUser;
+      if (user == null) {
+        await _supabase.auth.signInAnonymously();
+        user = _supabase.auth.currentUser;
+      }
+      
+      if (user == null) throw DomainAuthException("Gagal membuat user sesi.");
+
+      await _supabase.from('user_profiles').upsert({
+        'user_id': user.id,
+        ...profile.toJson(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id');
+
+      return const Success(null);
+    } catch (e) {
+      return ResultFailure(ErrorHandler.handleException(e));
+    }
+  }
+
+  @override
+  Future<Result<BrandProfile?, Failure>> getBrandProfile() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return const Success(null);
+
       final data = await _supabase
           .from('brand_profiles')
           .select()
           .eq('user_id', user.id)
           .maybeSingle();
 
-      if (data == null) return null;
+      if (data == null) return const Success(null);
 
-      return BrandProfile.fromJson(data);
+      return Success(BrandProfile.fromJson(data));
     } catch (e) {
-      print("Error fetching brand profile: $e");
-      return null;
+      return ResultFailure(ErrorHandler.handleException(e));
     }
   }
 
   @override
-  Future<Map<String, dynamic>> generateIdentity(
-      UserProfile profile, String languageCode) async {
-    await saveUserProfile(profile);
-
-    final payload = {
-      'fullName': profile.fullName,
-      'whatILove': profile.whatILove,
-      'whatImGoodAt': profile.whatImGoodAt,
-      'whatTheWorldNeeds': profile.whatTheWorldNeeds,
-      'whatICanBePaidFor': profile.whatICanBePaidFor,
-    };
-
-    final result = await _geminiService.generateContent(
-        'generate_identity', payload, languageCode);
-    if (result == null || result.isEmpty) {
-      throw Exception("Gagal mendapatkan respons dari AI.");
-    }
-
-    return _parseIdentityResponse(result);
-  }
-
-  Map<String, dynamic> _parseIdentityResponse(String text) {
+  Future<Result<void, Failure>> saveBrandProfile(BrandProfile profile) async {
     try {
-      String cleanText =
-          text.replaceAll('```json', '').replaceAll('```', '').trim();
-      final Map<String, dynamic> jsonData = json.decode(cleanText);
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw DomainAuthException("No User found");
 
-      final List<String> categories =
-          List<String>.from(jsonData['categories'] ?? []);
-      final List<String> microNiches =
-          List<String>.from(jsonData['niches'] ?? []);
-      final List<String> profileNames =
-          List<String>.from(jsonData['profile_names'] ?? []);
+      await _supabase.from('brand_profiles').upsert({
+        'user_id': user.id,
+        ...profile.toJson(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id');
 
-      String monetizationText =
-          "Konsultasi, Produk Digital, Konten Sponsor, Membership, Workshop";
-
-      return {
-        'aiResponse': text,
-        'profileNames': profileNames,
-        'categories': categories,
-        'microNiches': microNiches,
-        'opportunities': monetizationText,
-      };
+      return const Success(null);
     } catch (e) {
-      print("Error parsing JSON: $e");
-      throw Exception("Gagal memproses saran dari AI. Coba lagi.");
+      return ResultFailure(ErrorHandler.handleException(e));
+    }
+  }
+
+  // --- AI GENERATION METHODS ---
+
+  @override
+  Future<Result<Map<String, dynamic>, Failure>> generateIdentity(
+      UserProfile profile, String languageCode) async {
+    try {
+      // 1. Save Profile First
+      final saveResult = await saveUserProfile(profile);
+      if (saveResult.isFailure) return ResultFailure(saveResult.failure);
+
+      // 2. Prepare Payload
+      final payload = {
+        'fullName': profile.fullName,
+        'whatILove': profile.whatILove,
+        'whatImGoodAt': profile.whatImGoodAt,
+        'whatTheWorldNeeds': profile.whatTheWorldNeeds,
+        'whatICanBePaidFor': profile.whatICanBePaidFor,
+      };
+
+      // 3. Call AI Service
+      final aiResult = await _aiService.processAI(
+        action: 'generate_identity',
+        payload: payload,
+        languageCode: languageCode,
+      );
+
+      // 4. Parse Result
+      return aiResult.map((data) {
+        try {
+          final resultString = data['result'] as String;
+          return _parseIdentityResponse(resultString);
+        } catch (e) {
+          throw DataException("Gagal memproses saran identitas dari AI.");
+        }
+      });
+    } catch (e) {
+      return ResultFailure(ErrorHandler.handleException(e));
     }
   }
 
   @override
-  Future<Map<String, dynamic>> generatePremise({
+  Future<Result<Map<String, dynamic>, Failure>> generatePremise({
     required UserProfile userProfile,
     required BrandProfile brandProfile,
     required String strengths,
@@ -149,24 +152,94 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     required String threats,
     required String languageCode,
   }) async {
-    final payload = {
-      'selectedProfileName': brandProfile.selectedProfileName,
-      'selectedCategory': brandProfile.selectedCategory,
-      'selectedMicroNiche': brandProfile.selectedMicroNiche,
-      'strengths': strengths,
-      'weaknesses': weaknesses,
-      'opportunities': opportunities,
-      'threats': threats,
-      'userStrengths': userProfile.whatImGoodAt,
-    };
+    try {
+      final payload = {
+        'selectedProfileName': brandProfile.selectedProfileName,
+        'selectedCategory': brandProfile.selectedCategory,
+        'selectedMicroNiche': brandProfile.selectedMicroNiche,
+        'strengths': strengths,
+        'weaknesses': weaknesses,
+        'opportunities': opportunities,
+        'threats': threats,
+        'userStrengths': userProfile.whatImGoodAt,
+      };
 
-    final result = await _geminiService.generateContent(
-        'generate_premise', payload, languageCode);
-    if (result == null || result.isEmpty) {
-      throw Exception("Gagal mendapatkan respons dari AI.");
+      final aiResult = await _aiService.processAI(
+        action: 'generate_premise',
+        payload: payload,
+        languageCode: languageCode,
+      );
+
+      return aiResult.map((data) {
+        try {
+          final resultString = data['result'] as String;
+          return _parsePremiseResponse(resultString);
+        } catch (e) {
+          throw DataException("Gagal memproses saran premise dari AI.");
+        }
+      });
+    } catch (e) {
+      return ResultFailure(ErrorHandler.handleException(e));
     }
+  }
 
-    return _parsePremiseResponse(result);
+  @override
+  Future<Result<Map<String, dynamic>, Failure>> generateContentPillars({
+    required BrandProfile brandProfile,
+    required String languageCode,
+  }) async {
+    try {
+      await saveBrandProfile(brandProfile);
+
+      final payload = {
+        'selectedProfileName': brandProfile.selectedProfileName,
+        'selectedCategory': brandProfile.selectedCategory,
+        'selectedMicroNiche': brandProfile.selectedMicroNiche,
+        'toneOfVoice': brandProfile.toneOfVoice,
+        'targetAudience': brandProfile.targetAudience,
+        'selectedPremise': brandProfile.selectedPremise,
+      };
+
+      final aiResult = await _aiService.processAI(
+        action: 'generate_pillars',
+        payload: payload,
+        languageCode: languageCode,
+      );
+
+      return aiResult.map((data) {
+        try {
+          final resultString = data['result'] as String;
+          return _parsePillarResponse(resultString);
+        } catch (e) {
+          throw DataException("Gagal memproses content pillar dari AI.");
+        }
+      });
+    } catch (e) {
+      return ResultFailure(ErrorHandler.handleException(e));
+    }
+  }
+
+  // --- PRIVATE PARSING HELPERS (Diambil dari logika lama Anda) ---
+
+  Map<String, dynamic> _parseIdentityResponse(String text) {
+    String cleanText =
+        text.replaceAll('```json', '').replaceAll('```', '').trim();
+    final Map<String, dynamic> jsonData = json.decode(cleanText);
+
+    final List<String> categories =
+        List<String>.from(jsonData['categories'] ?? []);
+    final List<String> microNiches =
+        List<String>.from(jsonData['niches'] ?? []);
+    final List<String> profileNames =
+        List<String>.from(jsonData['profile_names'] ?? []);
+
+    return {
+      'aiResponse': text,
+      'profileNames': profileNames,
+      'categories': categories,
+      'microNiches': microNiches,
+      'opportunities': "Konsultasi, Produk Digital, Konten Sponsor, Membership, Workshop",
+    };
   }
 
   Map<String, dynamic> _parsePremiseResponse(String text) {
@@ -203,36 +276,12 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     };
   }
 
-  @override
-  Future<Map<String, dynamic>> generateContentPillars({
-    required BrandProfile brandProfile,
-    required String languageCode,
-  }) async {
-    await saveBrandProfile(brandProfile);
-
-    final payload = {
-      'selectedProfileName': brandProfile.selectedProfileName,
-      'selectedCategory': brandProfile.selectedCategory,
-      'selectedMicroNiche': brandProfile.selectedMicroNiche,
-      'toneOfVoice': brandProfile.toneOfVoice,
-      'targetAudience': brandProfile.targetAudience,
-      'selectedPremise': brandProfile.selectedPremise,
-    };
-
-    final result = await _geminiService.generateContent(
-        'generate_pillars', payload, languageCode);
-    if (result == null || result.isEmpty) {
-      throw Exception("Gagal mendapatkan respons dari AI.");
-    }
-
-    return _parsePillarResponse(result);
-  }
-
   Map<String, dynamic> _parsePillarResponse(String text) {
     final pillarTitleRegex =
         RegExp(r"^\s*\d+\.\s*(.*?)(?=\n|$)", multiLine: true);
     final matches = pillarTitleRegex.allMatches(text);
     var contentPillarOptions = matches.map((m) => m.group(1)!.trim()).toList();
+    
     if (contentPillarOptions.length > 4) {
       contentPillarOptions = contentPillarOptions.sublist(0, 4);
     }
@@ -242,4 +291,4 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
       'contentPillarOptions': contentPillarOptions,
     };
   }
-}
+} 

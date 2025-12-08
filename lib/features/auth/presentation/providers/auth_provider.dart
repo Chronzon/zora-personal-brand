@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:personal_branding_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:personal_branding_app/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthProvider extends ChangeNotifier {

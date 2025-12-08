@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_branding_app/core/widgets/custom_app_bar.dart';
-import 'package:personal_branding_app/features/auth/presentation/pages/widgets/auth_trigger_sheet.dart';
+import 'package:personal_branding_app/features/auth/presentation/widgets/auth_trigger_sheet.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../dashboard/presentation/pages/dashboard_screen.dart';

@@ -1,20 +1,24 @@
-import 'package:personal_branding_app/core/services/gemini_service.dart';
-import 'package:personal_branding_app/features/content_creation/data/models/generated_script.dart';
-import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
-import '../models/content_factory_item.dart';
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:personal_branding_app/core/utils/result.dart';
+import 'package:personal_branding_app/core/errors/failures.dart';
+import 'package:personal_branding_app/core/errors/error_handler.dart';
+import 'package:personal_branding_app/core/errors/exceptions.dart';
+import 'package:personal_branding_app/core/services/i_ai_service.dart'; // Gunakan Interface
 
-import 'package:personal_branding_app/features/content_creation/domain/repositories/content_creation_repository.dart';
+import 'package:personal_branding_app/features/content_creation/data/models/generated_script.dart';
+import 'package:personal_branding_app/features/content_creation/data/models/content_factory_item.dart';
+import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
+import '../../domain/repositories/i_content_creation_repository.dart'; // Import Interface IContentCreationRepository
 
-class ContentCreationRepositoryImpl implements ContentCreationRepository {
-  final GeminiService _geminiService;
+class ContentCreationRepositoryImpl implements IContentCreationRepository {
   final SupabaseClient _supabase;
+  final IAIService _aiService; // Depend on Interface
 
-  ContentCreationRepositoryImpl(this._supabase, this._geminiService);
+  ContentCreationRepositoryImpl(this._supabase, this._aiService);
 
   @override
-  Future<Map<String, dynamic>> generateContentIdeas({
+  Future<Result<Map<String, dynamic>, Failure>> generateContentIdeas({
     required String pillar,
     required int ideaCount,
     required BrandProfile brandProfile,
@@ -31,111 +35,35 @@ class ContentCreationRepositoryImpl implements ContentCreationRepository {
     };
 
     try {
-      final result = await _geminiService.generateContent(
-          'generate_ideas', payload, languageCode);
+      // 1. Panggil AI Service
+      final aiResult = await _aiService.processAI(
+        action: 'generate_ideas',
+        payload: payload,
+        languageCode: languageCode,
+      );
 
-      if (result != null) {
-        // Try to parse as JSON
-        final parsedIdeas = _parseResponse(result);
+      // 2. Map hasilnya (Functional style)
+      return await aiResult.mapAsync((data) async {
+        final rawText = data['result'] as String;
+        final parsedIdeas = _parseResponse(rawText);
 
-        // Save to Supabase if parsed successfully
         if (parsedIdeas != null) {
+          // Simpan ke Supabase (Fire and forget, atau await jika kritis)
           await _saveIdeasToSupabase(parsedIdeas, pillar);
         }
 
         return {
-          'rawResponse': result,
-          'parsedIdeas': parsedIdeas,
+          'rawResponse': rawText,
+          'parsedIdeas': parsedIdeas ?? [],
         };
-      } else {
-        throw Exception('No response from AI service');
-      }
+      });
     } catch (e) {
-      rethrow;
+      return ResultFailure(ErrorHandler.handleException(e));
     }
   }
 
-  Future<void> _saveIdeasToSupabase(
-      List<ContentIdea> ideas, String pillar) async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return;
-
-    final List<Map<String, dynamic>> data = ideas.map((idea) {
-      return {
-        'user_id': user.id,
-        'pillar': pillar,
-        'title': idea.title,
-        'angle': idea.angle,
-        'content_overview': idea.contentOverview,
-        'viral_potential': idea.viralPotential,
-        'insight': idea.insight,
-        'created_at': DateTime.now().toIso8601String(),
-      };
-    }).toList();
-
-    await _supabase.from('content_ideas').insert(data);
-  }
-
-  List<ContentIdea>? _parseResponse(String text) {
-    try {
-      // Try to extract JSON from response
-      final jsonMatch = RegExp(r'\[[\s\S]*\]').firstMatch(text);
-      if (jsonMatch == null) {
-        return null;
-      }
-
-      final jsonString = jsonMatch.group(0)!;
-      final List<dynamic> jsonList = json.decode(jsonString);
-
-      return jsonList.map((item) => ContentIdea.fromJson(item)).toList();
-    } catch (e) {
-      // If parsing fails, return null
-      return null;
-    }
-  }
-
-  // 1. Simpan Script ke Database
   @override
-  Future<void> saveGeneratedScript(GeneratedScript script) async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return;
-
-    final data = script.toJson();
-    data['user_id'] = user.id; // Tambahkan user_id manual
-
-    await _supabase.from('generated_scripts').insert(data);
-  }
-
-  // 2. Ambil Semua Script milik User
-  @override
-  Future<List<GeneratedScript>> getGeneratedScripts() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return [];
-
-    try {
-      final response = await _supabase
-          .from('generated_scripts')
-          .select()
-          .eq('user_id', user.id)
-          .order('created_at', ascending: false); // Urutkan dari yang terbaru
-
-      return (response as List)
-          .map((item) => GeneratedScript.fromJson(item))
-          .toList();
-    } catch (e) {
-      print("Error fetching scripts: $e");
-      return [];
-    }
-  }
-
-  // 3. Hapus Script
-  @override
-  Future<void> deleteGeneratedScript(String scriptId) async {
-    await _supabase.from('generated_scripts').delete().eq('id', scriptId);
-  }
-
-  @override
-  Future<String> generateScript({
+  Future<Result<String, Failure>> generateScript({
     required ContentIdea idea,
     required String platform,
     required BrandProfile brandProfile,
@@ -154,16 +82,109 @@ class ContentCreationRepositoryImpl implements ContentCreationRepository {
     };
 
     try {
-      final result = await _geminiService.generateContent(
-          'generate_script', payload, languageCode);
+      final aiResult = await _aiService.processAI(
+        action: 'generate_script',
+        payload: payload,
+        languageCode: languageCode,
+      );
 
-      if (result != null) {
-        return result;
-      } else {
-        throw Exception('No response from AI service');
-      }
+      return aiResult.map((data) => data['result'] as String);
     } catch (e) {
-      rethrow;
+      return ResultFailure(ErrorHandler.handleException(e));
+    }
+  }
+
+  // --- CRUD Methods (Wrapped in Result) ---
+
+  @override
+  Future<Result<void, Failure>> saveGeneratedScript(GeneratedScript script) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw AuthException("User not found");
+
+      final data = script.toJson();
+      data['user_id'] = user.id;
+
+      await _supabase.from('generated_scripts').insert(data);
+      return const Success(null);
+    } catch (e) {
+      return ResultFailure(ErrorHandler.handleException(e));
+    }
+  }
+
+  @override
+  Future<Result<List<GeneratedScript>, Failure>> getGeneratedScripts() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return const Success([]);
+
+      final response = await _supabase
+          .from('generated_scripts')
+          .select()
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
+
+      final scripts = (response as List)
+          .map((item) => GeneratedScript.fromJson(item))
+          .toList();
+      
+      return Success(scripts);
+    } catch (e) {
+      return ResultFailure(ErrorHandler.handleException(e));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> deleteGeneratedScript(String scriptId) async {
+    try {
+      await _supabase.from('generated_scripts').delete().eq('id', scriptId);
+      return const Success(null);
+    } catch (e) {
+      return ResultFailure(ErrorHandler.handleException(e));
+    }
+  }
+
+  // --- Helper Methods ---
+
+  Future<void> _saveIdeasToSupabase(
+      List<ContentIdea> ideas, String pillar) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return;
+
+      final List<Map<String, dynamic>> data = ideas.map((idea) {
+        return {
+          'user_id': user.id,
+          'pillar': pillar,
+          'title': idea.title,
+          'angle': idea.angle,
+          'content_overview': idea.contentOverview,
+          'viral_potential': idea.viralPotential,
+          'insight': idea.insight,
+          'created_at': DateTime.now().toIso8601String(),
+        };
+      }).toList();
+
+      await _supabase.from('content_ideas').insert(data);
+    } catch (e) {
+      print("Warning: Failed to save backup ideas: $e");
+      // Tidak melempar error agar user tetap melihat hasil generate
+    }
+  }
+
+  List<ContentIdea>? _parseResponse(String text) {
+    try {
+      String cleanText = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      final jsonMatch = RegExp(r'\[[\s\S]*\]').firstMatch(cleanText);
+      
+      if (jsonMatch == null) return null;
+
+      final jsonString = jsonMatch.group(0)!;
+      final List<dynamic> jsonList = json.decode(jsonString);
+
+      return jsonList.map((item) => ContentIdea.fromJson(item)).toList();
+    } catch (e) {
+      return null;
     }
   }
 }

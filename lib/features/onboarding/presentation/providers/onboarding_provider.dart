@@ -1,234 +1,245 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-
+import 'package:personal_branding_app/core/errors/failures.dart';
 import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
 import 'package:personal_branding_app/features/onboarding/data/models/user_profile.dart';
-import 'package:personal_branding_app/features/onboarding/domain/repositories/onboarding_repository.dart';
+import '../../domain/repositories/i_onboarding_repository.dart'; // Import Interface
 
 class OnboardingProvider extends ChangeNotifier {
-  final OnboardingRepository _repository;
+  // Gunakan Interface, bukan Concrete Implementation
+  final IOnboardingRepository _repository;
 
-  // State
+  // --- STATE (Encapsulated) ---
   UserProfile _userProfile = UserProfile();
   BrandProfile _brandProfile = BrandProfile();
-  File? profileImage;
+  File? _profileImage;
+  
+  bool _isLoading = false;
+  Failure? _failure; // Simpan Failure object, bukan sekadar String error
 
-  // AI State
-  bool isLoading = false;
-  String? aiResponse;
-  String? errorMessage;
-
-  // Options
-  List<String> profileNameOptions = [];
-  List<String> categoryOptions = [];
-  List<String> microNicheOptions = [];
-  List<String> premiseOptions = [];
-  List<String> contentPillarOptions = [];
-
-  // SWOT fields now in BrandProfile model
-  String? premiseAiResponse;
-  String? pillarAiResponse;
+  // --- OPTIONS STATE ---
+  List<String> _profileNameOptions = [];
+  List<String> _categoryOptions = [];
+  List<String> _microNicheOptions = [];
+  List<String> _premiseOptions = [];
+  List<String> _contentPillarOptions = [];
+  
+  String? _aiResponse;
+  String? _premiseAiResponse;
+  String? _pillarAiResponse;
 
   OnboardingProvider(this._repository);
 
-  // Getters
+  // --- GETTERS (Public access to state) ---
   UserProfile get userProfile => _userProfile;
   BrandProfile get brandProfile => _brandProfile;
+  File? get profileImage => _profileImage;
+  
+  bool get isLoading => _isLoading;
+  Failure? get failure => _failure;
+  String? get errorMessage => _failure?.message; // Helper for UI compatibility
+  
+  List<String> get profileNameOptions => List.unmodifiable(_profileNameOptions);
+  List<String> get categoryOptions => List.unmodifiable(_categoryOptions);
+  List<String> get microNicheOptions => List.unmodifiable(_microNicheOptions);
+  List<String> get premiseOptions => List.unmodifiable(_premiseOptions);
+  List<String> get contentPillarOptions => List.unmodifiable(_contentPillarOptions);
+  
+  String? get aiResponse => _aiResponse;
+  String? get premiseAiResponse => _premiseAiResponse;
+  String? get pillarAiResponse => _pillarAiResponse;
 
-  // Setters for UserProfile
+  // --- SETTERS (With Validation Logic if needed) ---
   void updateFullName(String name) {
     _userProfile = _userProfile.copyWith(fullName: name);
     notifyListeners();
   }
-
+  
   set whatILove(String value) {
     _userProfile = _userProfile.copyWith(whatILove: value);
     notifyListeners();
   }
-
+  
   set whatImGoodAt(String value) {
-    _userProfile = _userProfile.copyWith(whatImGoodAt: value);
-    notifyListeners();
+      _userProfile = _userProfile.copyWith(whatImGoodAt: value);
+      notifyListeners();
   }
 
   set whatTheWorldNeeds(String value) {
-    _userProfile = _userProfile.copyWith(whatTheWorldNeeds: value);
-    notifyListeners();
+      _userProfile = _userProfile.copyWith(whatTheWorldNeeds: value);
+      notifyListeners();
   }
 
   set whatICanBePaidFor(String value) {
-    _userProfile = _userProfile.copyWith(whatICanBePaidFor: value);
-    notifyListeners();
+      _userProfile = _userProfile.copyWith(whatICanBePaidFor: value);
+      notifyListeners();
   }
 
   void setProfileImage(File image) {
-    profileImage = image;
+    _profileImage = image;
     notifyListeners();
   }
-
-  // Setters for BrandProfile
+  
+  // Setter helpers for Brand Profile (similar pattern...)
   set selectedProfileName(String? value) {
     _brandProfile = _brandProfile.copyWith(selectedProfileName: value);
     notifyListeners();
   }
-
+  // ... (Implement other setters: selectedCategory, selectedMicroNiche, etc. using copyWith) ...
   set selectedCategory(String? value) {
-    _brandProfile = _brandProfile.copyWith(selectedCategory: value);
-    notifyListeners();
+      _brandProfile = _brandProfile.copyWith(selectedCategory: value);
+      notifyListeners();
   }
-
   set selectedMicroNiche(String? value) {
-    _brandProfile = _brandProfile.copyWith(selectedMicroNiche: value);
+      _brandProfile = _brandProfile.copyWith(selectedMicroNiche: value);
+      notifyListeners();
+  }
+  set strengths(String value) {
+      _brandProfile = _brandProfile.copyWith(strengths: value);
+      notifyListeners();
+  }
+  set weaknesses(String value) {
+      _brandProfile = _brandProfile.copyWith(weaknesses: value);
+      notifyListeners();
+  }
+  set threats(String value) {
+      _brandProfile = _brandProfile.copyWith(threats: value);
+      notifyListeners();
+  }
+  set toneOfVoice(String? value) {
+    _brandProfile = _brandProfile.copyWith(toneOfVoice: value);
     notifyListeners();
   }
-
+  set targetAudience(String value) {
+    _brandProfile = _brandProfile.copyWith(targetAudience: value);
+    notifyListeners();
+  }
   set selectedPremise(String? value) {
     _brandProfile = _brandProfile.copyWith(selectedPremise: value);
     notifyListeners();
   }
 
-  set toneOfVoice(String? value) {
-    _brandProfile = _brandProfile.copyWith(toneOfVoice: value);
-    notifyListeners();
-  }
 
-  set targetAudience(String value) {
-    _brandProfile = _brandProfile.copyWith(targetAudience: value);
-    notifyListeners();
-  }
-
-  // SWOT setters
-  set strengths(String value) {
-    _brandProfile = _brandProfile.copyWith(strengths: value);
-    notifyListeners();
-  }
-
-  set weaknesses(String value) {
-    _brandProfile = _brandProfile.copyWith(weaknesses: value);
-    notifyListeners();
-  }
-
-  set opportunities(String value) {
-    _brandProfile = _brandProfile.copyWith(opportunities: value);
-    notifyListeners();
-  }
-
-  set threats(String value) {
-    _brandProfile = _brandProfile.copyWith(threats: value);
-    notifyListeners();
-  }
+  // --- ACTIONS (Async with Result Handling) ---
 
   Future<bool> loadUserData() async {
-    isLoading = true;
+    _isLoading = true;
+    _failure = null;
     notifyListeners();
 
-    try {
-      final userProfileData = await _repository.getUserProfile();
-      final brandProfileData = await _repository.getBrandProfile();
+    final userResult = await _repository.getUserProfile();
+    final brandResult = await _repository.getBrandProfile();
 
-      if (userProfileData != null) {
-        _userProfile = userProfileData;
-      }
+    _isLoading = false;
 
-      if (brandProfileData != null) {
-        _brandProfile = brandProfileData;
-        if (_brandProfile.contentPillars.isNotEmpty) {
-          contentPillarOptions = _brandProfile.contentPillars;
+    // Handle User Profile Result
+    userResult.fold(
+      onSuccess: (data) => _userProfile = data,
+      onFailure: (f) => _failure = f, // Non-blocking failure usually for load
+    );
+
+    // Handle Brand Profile Result
+    brandResult.fold(
+      onSuccess: (data) {
+        if (data != null) {
+          _brandProfile = data;
+          if (data.contentPillars.isNotEmpty) {
+            _contentPillarOptions = List.from(data.contentPillars);
+          }
         }
-      }
+      },
+      onFailure: (f) => _failure = f,
+    );
 
-      isLoading = false;
-      notifyListeners();
-
-      return userProfileData != null && userProfileData.whatILove.isNotEmpty;
-    } catch (e) {
-      isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    notifyListeners();
+    // Return simple boolean based on critical data presence
+    return _userProfile.fullName.isNotEmpty && _userProfile.whatILove.isNotEmpty;
   }
 
-  // Actions
   Future<void> generateIdentity(String languageCode) async {
-    isLoading = true;
-    errorMessage = null;
-    aiResponse = null;
+    _isLoading = true;
+    _failure = null;
+    _aiResponse = null;
     notifyListeners();
 
-    try {
-      final result =
-          await _repository.generateIdentity(_userProfile, languageCode);
-      aiResponse = result['aiResponse'];
-      profileNameOptions = List<String>.from(result['profileNames']);
-      categoryOptions = List<String>.from(result['categories']);
-      microNicheOptions = List<String>.from(result['microNiches']);
-      // Store opportunities in BrandProfile
-      _brandProfile = _brandProfile.copyWith(
-        opportunities: result['opportunities'],
-      );
-    } catch (e) {
-      errorMessage = "Terjadi kesalahan: ${e.toString()}";
-    }
+    final result = await _repository.generateIdentity(_userProfile, languageCode);
 
-    isLoading = false;
+    result.fold(
+      onSuccess: (data) {
+        _aiResponse = data['aiResponse'];
+        _profileNameOptions = List<String>.from(data['profileNames']);
+        _categoryOptions = List<String>.from(data['categories']);
+        _microNicheOptions = List<String>.from(data['microNiches']);
+        
+        _brandProfile = _brandProfile.copyWith(
+           opportunities: data['opportunities']
+        );
+      },
+      onFailure: (f) {
+        _failure = f;
+      },
+    );
+
+    _isLoading = false;
     notifyListeners();
   }
 
   Future<void> generatePremise(String languageCode) async {
-    isLoading = true;
-    errorMessage = null;
-    premiseAiResponse = null;
+    _isLoading = true;
+    _failure = null;
+    _premiseAiResponse = null;
     notifyListeners();
 
-    try {
-      final result = await _repository.generatePremise(
-        userProfile: _userProfile,
-        brandProfile: _brandProfile,
-        strengths: _brandProfile.strengths,
-        weaknesses: _brandProfile.weaknesses,
-        opportunities: _brandProfile.opportunities,
-        threats: _brandProfile.threats,
-        languageCode: languageCode,
-      );
-      premiseAiResponse = result['aiResponse'];
-      premiseOptions = List<String>.from(result['premiseOptions']);
-    } catch (e) {
-      errorMessage = "Terjadi kesalahan: ${e.toString()}";
-    }
+    final result = await _repository.generatePremise(
+      userProfile: _userProfile,
+      brandProfile: _brandProfile,
+      strengths: _brandProfile.strengths,
+      weaknesses: _brandProfile.weaknesses,
+      opportunities: _brandProfile.opportunities,
+      threats: _brandProfile.threats,
+      languageCode: languageCode,
+    );
 
-    isLoading = false;
+    result.fold(
+      onSuccess: (data) {
+        _premiseAiResponse = data['aiResponse'];
+        _premiseOptions = List<String>.from(data['premiseOptions']);
+      },
+      onFailure: (f) => _failure = f,
+    );
+
+    _isLoading = false;
     notifyListeners();
   }
 
   Future<void> generateContentPillars(String languageCode) async {
-    isLoading = true;
-    errorMessage = null;
-    pillarAiResponse = null;
+    _isLoading = true;
+    _failure = null;
+    _pillarAiResponse = null;
     notifyListeners();
 
-    try {
-      final result = await _repository.generateContentPillars(
-        brandProfile: _brandProfile,
-        languageCode: languageCode,
-      );
-      pillarAiResponse = result['aiResponse'];
-      contentPillarOptions = List<String>.from(result['contentPillarOptions']);
-      // 1. Update state brand profile dengan pilar baru
-      _brandProfile = _brandProfile.copyWith(
-        contentPillars: contentPillarOptions,
-      );
+    final result = await _repository.generateContentPillars(
+      brandProfile: _brandProfile,
+      languageCode: languageCode,
+    );
 
-      // 2. Simpan permanen ke Supabase
-      await _repository.saveBrandProfile(_brandProfile);
-    } catch (e) {
-      errorMessage = "Terjadi kesalahan: ${e.toString()}";
-      // Tambahkan ini agar UI tahu kalau ada yang salah, meskipun AI sukses
-      print("ERROR SAVE DB: $e");
-      // Opsional: Kosongkan response agar UI tidak navigasi (jika ingin ketat)
-      // pillarAiResponse = null;
-    }
+    await result.foldAsync(
+      onSuccess: (data) async {
+        _pillarAiResponse = data['aiResponse'];
+        _contentPillarOptions = List<String>.from(data['contentPillarOptions']);
+        
+        _brandProfile = _brandProfile.copyWith(contentPillars: _contentPillarOptions);
+        
+        // Save automatically
+        final saveResult = await _repository.saveBrandProfile(_brandProfile);
+        if (saveResult.isFailure) {
+           _failure = saveResult.failure;
+        }
+      },
+      onFailure: (f) async => _failure = f,
+    );
 
-    isLoading = false;
+    _isLoading = false;
     notifyListeners();
   }
 }

@@ -1,8 +1,7 @@
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:personal_branding_app/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
-
-import 'package:personal_branding_app/features/auth/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final SupabaseClient _supabase;

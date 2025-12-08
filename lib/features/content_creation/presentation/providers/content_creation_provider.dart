@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:personal_branding_app/core/errors/failures.dart'; // Import Failure
 import 'package:personal_branding_app/features/content_creation/data/models/content_factory_item.dart';
 import 'package:personal_branding_app/features/content_creation/data/models/generated_script.dart';
-import 'package:personal_branding_app/features/content_creation/domain/repositories/content_creation_repository.dart';
+import 'package:personal_branding_app/features/content_creation/domain/repositories/i_content_creation_repository.dart'; // Gunakan Interface
 import 'package:personal_branding_app/features/onboarding/data/models/brand_profile.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class ContentCreationProvider extends ChangeNotifier {
-  final ContentCreationRepository _repository;
+  // Gunakan Interface Repository
+  final IContentCreationRepository _repository;
   final OnboardingProvider _onboardingProvider;
 
   // Content factories state
@@ -16,24 +18,23 @@ class ContentCreationProvider extends ChangeNotifier {
   // Generated scripts state
   List<GeneratedScript> generatedScripts = [];
   bool isLoadingScripts = false;
+  Failure? _failure; // Menyimpan error state
 
   int _guestUsageCount = 0;
-  static const int REMINDER_INTERVAL = 5; // Muncul setiap 5 kali
+  static const int REMINDER_INTERVAL = 5;
 
-  // Getter: Cek apakah saatnya muncul popup?
+  // Getter
+  Failure? get failure => _failure;
+
   bool get shouldShowGuestReminder {
-    // Muncul jika penggunaan > 0 DAN merupakan kelipatan 5 (5, 10, 15...)
     return _guestUsageCount > 0 && (_guestUsageCount % REMINDER_INTERVAL == 0);
   }
 
   void incrementGuestUsage() {
     _guestUsageCount++;
-    // Tidak perlu notifyListeners() jika hanya untuk logika internal,
-    // tapi boleh ditambahkan jika ingin menampilkan counter di UI.
   }
 
   ContentCreationProvider(this._repository, this._onboardingProvider) {
-    // Initialize with one empty factory
     contentFactories.add(ContentFactoryItem(id: _generateId()));
   }
 
@@ -41,17 +42,24 @@ class ContentCreationProvider extends ChangeNotifier {
     return const Uuid().v4();
   }
 
+  // --- REFACTORED: loadScripts ---
   Future<void> loadScripts() async {
     isLoadingScripts = true;
-    // Jangan notifyListeners di sini jika dipanggil di splash screen bersamaan provider lain
-    // untuk menghindari konflik build, tapi untuk case umum oke.
+    _failure = null;
+    // Hindari notifyListeners di sini jika dipanggil saat init app
+    
+    final result = await _repository.getGeneratedScripts();
 
-    try {
-      final scripts = await _repository.getGeneratedScripts();
-      generatedScripts = scripts;
-    } catch (e) {
-      print("Error loading scripts: $e");
-    }
+    // Buka bungkusan Result
+    result.fold(
+      onSuccess: (scripts) {
+        generatedScripts = scripts;
+      },
+      onFailure: (f) {
+        _failure = f;
+        print("Error loading scripts: ${f.message}");
+      },
+    );
 
     isLoadingScripts = false;
     notifyListeners();
@@ -93,87 +101,114 @@ class ContentCreationProvider extends ChangeNotifier {
     }
   }
 
+  // --- REFACTORED: generateContentIdeas ---
   Future<void> generateContentIdeas(String id, String languageCode) async {
     final index = contentFactories.indexWhere((f) => f.id == id);
     if (index == -1) return;
 
     final factory = contentFactories[index];
     factory.isLoading = true;
+    factory.generatedIdeas = null; // Reset error sebelumnya
     notifyListeners();
 
-    try {
-      // Get brand profile from onboarding provider
-      final BrandProfile brandProfile = _onboardingProvider.brandProfile;
+    final BrandProfile brandProfile = _onboardingProvider.brandProfile;
 
-      // Call repository to generate content ideas
-      final result = await _repository.generateContentIdeas(
-        pillar: factory.selectedPillar ?? '',
-        ideaCount: factory.ideaCount,
-        brandProfile: brandProfile,
-        languageCode: languageCode,
-      );
+    final result = await _repository.generateContentIdeas(
+      pillar: factory.selectedPillar ?? '',
+      ideaCount: factory.ideaCount,
+      brandProfile: brandProfile,
+      languageCode: languageCode,
+    );
 
-      // Update factory with results
-      factory.generatedIdeas = result['rawResponse'];
-      factory.ideas = result['parsedIdeas'];
-    } catch (e) {
-      factory.generatedIdeas = "Error: ${e.toString()}";
-      factory.ideas = null;
-    }
+    // Buka bungkusan Result
+    result.fold(
+      onSuccess: (data) {
+        factory.generatedIdeas = data['rawResponse'];
+        factory.ideas = data['parsedIdeas'];
+      },
+      onFailure: (f) {
+        factory.generatedIdeas = "Error: ${f.message}";
+        factory.ideas = null;
+      },
+    );
 
     factory.isLoading = false;
     notifyListeners();
   }
 
+  // --- REFACTORED: generateScript ---
   Future<GeneratedScript?> generateScript(
       ContentIdea idea, String pillar, String languageCode) async {
-    try {
-      final BrandProfile brandProfile = _onboardingProvider.brandProfile;
+    
+    final BrandProfile brandProfile = _onboardingProvider.brandProfile;
+    GeneratedScript? resultScript;
 
-      // 1. Generate text dari AI (Repo)
-      final scriptText = await _repository.generateScript(
-        idea: idea,
-        platform: idea.platform,
-        brandProfile: brandProfile,
-        languageCode: languageCode,
-      );
+    // 1. Generate text dari AI (Repo mengembalikan Result<String, Failure>)
+    final result = await _repository.generateScript(
+      idea: idea,
+      platform: idea.platform,
+      brandProfile: brandProfile,
+      languageCode: languageCode,
+    );
 
-      // 2. Buat objek Script (Perhatikan ID sekarang UUID string dari generateId)
-      final script = GeneratedScript(
-        id: _generateId(), // Generate ID unik
-        title: idea.title,
-        platform: idea.platform,
-        script: scriptText,
-        createdAt: DateTime.now(),
-        originalIdeaId: null,
-        pillar: pillar,
-      );
+    // Kita gunakan foldAsync karena di dalam success kita melakukan operasi async (save DB)
+    await result.foldAsync(
+      onSuccess: (scriptText) async {
+        // 2. Buat objek Script
+        final script = GeneratedScript(
+          id: _generateId(),
+          title: idea.title,
+          platform: idea.platform,
+          script: scriptText,
+          createdAt: DateTime.now(),
+          originalIdeaId: null,
+          pillar: pillar,
+        );
 
-      // 3. Simpan ke Database Supabase
-      await _repository.saveGeneratedScript(script);
+        // 3. Simpan ke Database
+        final saveResult = await _repository.saveGeneratedScript(script);
 
-      // 4. Update List Lokal
-      generatedScripts.insert(0, script);
-      notifyListeners();
+        if (saveResult.isSuccess) {
+          generatedScripts.insert(0, script);
+          resultScript = script;
+        } else {
+          // Handle jika gagal save (misal koneksi putus saat save)
+          print("Failed to save script: ${saveResult.failure.message}");
+          _failure = saveResult.failure;
+        }
+      },
+      onFailure: (f) async {
+        print("Error generating script AI: ${f.message}");
+        _failure = f;
+      },
+    );
 
-      return script;
-    } catch (e) {
-      print("Error generating script: $e");
-      return null;
-    }
+    notifyListeners();
+    return resultScript;
   }
 
+  // --- REFACTORED: deleteScript ---
   void deleteScript(String scriptId) async {
-    // Hapus dari UI dulu agar cepat (Optimistic Update)
-    generatedScripts.removeWhere((s) => s.id == scriptId);
+    // 1. Hapus dari UI dulu agar cepat (Optimistic Update)
+    final index = generatedScripts.indexWhere((s) => s.id == scriptId);
+    if (index == -1) return;
+
+    final deletedScript = generatedScripts[index];
+    generatedScripts.removeAt(index);
     notifyListeners();
 
-    // Hapus dari Database
-    try {
-      await _repository.deleteGeneratedScript(scriptId);
-    } catch (e) {
-      // Handle error jika perlu (misal balikin lagi ke list)
-      print("Gagal menghapus dari DB");
+    // 2. Hapus dari Database
+    final result = await _repository.deleteGeneratedScript(scriptId);
+
+    // 3. Jika Gagal, Kembalikan data (Rollback)
+    if (result.isFailure) {
+      print("Gagal menghapus dari DB: ${result.failure.message}");
+      generatedScripts.insert(index, deletedScript);
+      notifyListeners();
+      
+      // Opsional: Set global failure untuk menampilkan snackbar di UI
+      _failure = result.failure;
+      notifyListeners();
     }
   }
 }
