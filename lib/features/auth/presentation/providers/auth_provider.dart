@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:personal_branding_app/core/network/api_client.dart';
 import 'package:personal_branding_app/features/auth/domain/repositories/i_auth_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _repository;
@@ -13,7 +13,7 @@ class AuthProvider extends ChangeNotifier {
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  User? get currentUser => _repository.currentUser;
+  ApiUser? get currentUser => _repository.currentUser;
 
   // Actions
   Future<bool> signIn(String email, String password) async {

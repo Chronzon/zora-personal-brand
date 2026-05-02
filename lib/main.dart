@@ -10,7 +10,6 @@ import 'package:personal_branding_app/features/onboarding/presentation/pages/spl
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:personal_branding_app/core/di/service_locator.dart';
 import 'package:personal_branding_app/features/onboarding/domain/repositories/i_onboarding_repository.dart';
 
@@ -20,12 +19,6 @@ Future<void> main() async {
   try {
     // Load the .env file
     await dotenv.load(fileName: ".env");
-
-    // Initialize Supabase
-    await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!,
-      anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-    );
 
     setupServiceLocator();
 

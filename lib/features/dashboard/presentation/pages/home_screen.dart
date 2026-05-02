@@ -114,7 +114,7 @@ class _ContentFactoryWidgetState extends State<ContentFactoryWidget> {
                 // Kolom 1: Dropdown Content Pillar
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: widget.factoryItem.selectedPillar,
+                    value: widget.factoryItem.selectedPillar,
                     items: pillarOptions
                         .map((p) => DropdownMenuItem(
                             value: p,

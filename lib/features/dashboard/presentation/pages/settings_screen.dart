@@ -7,7 +7,6 @@ import 'package:personal_branding_app/core/providers/locale_provider.dart';
 import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -117,8 +116,7 @@ class SettingsScreen extends StatelessWidget {
     final localeProvider = context.watch<LocaleProvider>();
     final user = onboardingProvider.userProfile;
     final l10n = AppLocalizations.of(context)!;
-    final isGuest =
-        Supabase.instance.client.auth.currentUser?.isAnonymous ?? false;
+    final isGuest = authProvider.currentUser?.isAnonymous ?? false;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),

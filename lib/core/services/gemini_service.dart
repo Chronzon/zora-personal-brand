@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:personal_branding_app/core/network/api_client.dart';
 import 'package:personal_branding_app/core/utils/result.dart';
 import 'package:personal_branding_app/core/errors/failures.dart';
 import 'package:personal_branding_app/core/errors/exceptions.dart';
@@ -6,11 +6,12 @@ import 'package:personal_branding_app/core/errors/error_handler.dart';
 import 'i_ai_service.dart';
 
 class GeminiService implements IAIService {
-  final SupabaseClient _supabase;
+  final ApiClient _apiClient;
   static const int _maxRetries = 3;
-  static const Duration _timeout = Duration(seconds: 45); // Sedikit lebih lama untuk AI
+  static const Duration _timeout =
+      Duration(seconds: 45); // Sedikit lebih lama untuk AI
 
-  GeminiService(this._supabase);
+  GeminiService(this._apiClient);
 
   @override
   Future<Result<Map<String, dynamic>, Failure>> processAI({
@@ -20,33 +21,21 @@ class GeminiService implements IAIService {
     int retryCount = 0,
   }) async {
     try {
-      final response = await _supabase.functions
-          .invoke(
-            'process-ai',
-            body: {
-              'action': action,
-              'payload': payload,
-              'language': languageCode,
-            },
-          )
-          .timeout(
-            _timeout,
-            onTimeout: () {
-              throw NetworkException(
-                'AI Request timed out after ${_timeout.inSeconds} seconds',
-                code: 'TIMEOUT',
-              );
-            },
+      final data = await _apiClient.post('/process-ai', body: {
+        'action': action,
+        'payload': payload,
+        'language': languageCode,
+      }).timeout(
+        _timeout,
+        onTimeout: () {
+          throw NetworkException(
+            'AI Request timed out after ${_timeout.inSeconds} seconds',
+            code: 'TIMEOUT',
           );
+        },
+      );
 
-      // Cek status HTTP dari Function
-      if (response.status != 200) {
-        return ResultFailure(_handleErrorResponse(response));
-      }
-
-      final data = response.data as Map<String, dynamic>?;
-
-      if (data == null || data.isEmpty) {
+      if (data is! Map<String, dynamic> || data.isEmpty) {
         throw AIServiceException(
           'AI returned empty response',
           code: 'INVALID_RESPONSE',
@@ -55,12 +44,12 @@ class GeminiService implements IAIService {
 
       // Cek jika body response mengandung error flag dari AI logic
       if (data.containsKey('error')) {
-         // Handle custom error response structure from Edge Function
-         return ResultFailure(AIServiceFailure(message: data['error'].toString()));
+        // Handle custom error response structure from Edge Function
+        return ResultFailure(
+            AIServiceFailure(message: data['error'].toString()));
       }
 
       return Success(data);
-
     } on NetworkException catch (e) {
       return ResultFailure(ErrorHandler.handleException(e));
     } on AIServiceException catch (e) {
@@ -76,13 +65,8 @@ class GeminiService implements IAIService {
       }
       return ResultFailure(ErrorHandler.handleException(e));
     } catch (e, stackTrace) {
-      return ResultFailure(ErrorHandler.handleException(e, stackTrace: stackTrace));
+      return ResultFailure(
+          ErrorHandler.handleException(e, stackTrace: stackTrace));
     }
-  }
-
-  Failure _handleErrorResponse(FunctionResponse response) {
-    if (response.status == 504) return NetworkFailure.timeout();
-    if (response.status >= 500) return ServerFailure.internal();
-    return UnknownFailure(message: "AI Service Error: ${response.status}");
   }
 }

@@ -1,14 +1,20 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:personal_branding_app/core/network/api_client.dart';
+
+class AuthResult {
+  final ApiUser user;
+
+  const AuthResult(this.user);
+}
 
 abstract class AuthRepository {
-  User? get currentUser;
+  ApiUser? get currentUser;
 
-  Future<AuthResponse> signIn({
+  Future<AuthResult> signIn({
     required String email,
     required String password,
   });
 
-  Future<AuthResponse> signUp({
+  Future<AuthResult> signUp({
     required String email,
     required String password,
     required String fullName,

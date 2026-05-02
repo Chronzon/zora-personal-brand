@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/auth/presentation/widgets/auth_trigger_sheet.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 import '../providers/content_creation_provider.dart';
 import '../pages/generated_ideas_screen.dart';
@@ -32,7 +32,7 @@ class _CreateIdeaSheetState extends State<CreateIdeaSheet> {
   Future<void> _startGenerating() async {
     setState(() => _isGenerating = true);
     final contentProvider = context.read<ContentCreationProvider>();
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = context.read<AuthProvider>().currentUser;
 
     // Cek apakah guest (user null dianggap guest atau user anonim)
     final isGuest = user == null || user.isAnonymous;
@@ -187,7 +187,7 @@ class _CreateIdeaSheetState extends State<CreateIdeaSheet> {
                         return;
                       }
 
-                      final user = Supabase.instance.client.auth.currentUser;
+                      final user = context.read<AuthProvider>().currentUser;
                       final isGuest = user == null || user.isAnonymous;
                       final contentProvider =
                           context.read<ContentCreationProvider>();
@@ -208,55 +208,7 @@ class _CreateIdeaSheetState extends State<CreateIdeaSheet> {
                         return; // Berhenti di sini, tunggu user memilih di Popup
                       }
 
-                      // Jika tidak perlu diingatkan, langsung jalan
                       _startGenerating();
-
-                      setState(() => _isGenerating = true);
-
-                      try {
-                        // 1. Buat Factory Item baru
-                        final newId =
-                            await contentProvider.addContentFactoryWithPillar(
-                                _selectedPillar!, _ideaCount.toInt());
-
-                        if (newId != null && mounted) {
-                          // 2. Generate Ideas
-                          final languageCode = context.read<LocaleProvider>().languageCode;
-                          await contentProvider.generateContentIdeas(newId, languageCode);
-
-                          // 3. Ambil item yang sudah diupdate
-                          final item = contentProvider.contentFactories
-                              .firstWhere((e) => e.id == newId);
-
-                          if (mounted) {
-                            Navigator.pop(context); // Tutup sheet
-                            if (item.generatedIdeas != null ||
-                                (item.ideas != null &&
-                                    item.ideas!.isNotEmpty)) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => GeneratedIdeasScreen(
-                                    rawContent: item.generatedIdeas ?? '',
-                                    ideas: item.ideas,
-                                    pillar: _selectedPillar!,
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Error: $e")),
-                          );
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() => _isGenerating = false);
-                        }
-                      }
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: purpleColor,

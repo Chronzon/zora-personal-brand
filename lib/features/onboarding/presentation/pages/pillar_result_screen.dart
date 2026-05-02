@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:personal_branding_app/core/widgets/custom_app_bar.dart';
+import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/auth/presentation/widgets/auth_trigger_sheet.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -68,7 +68,7 @@ class PillarResultScreen extends StatelessWidget {
                     width: isMobile ? double.infinity : null,
                     child: ElevatedButton(
                       onPressed: () {
-                        final user = Supabase.instance.client.auth.currentUser;
+                        final user = context.read<AuthProvider>().currentUser;
 
                         // Cek apakah user adalah Anonymous (Guest)
                         final isGuest = user != null && user.isAnonymous;

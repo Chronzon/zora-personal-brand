@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'failures.dart';
 import 'exceptions.dart';
@@ -57,15 +56,6 @@ class ErrorHandler {
       return AuthFailure(message: error.message, code: error.code);
     }
 
-    // Supabase-specific errors
-    if (error is AuthApiException) {
-      return _handleSupabaseAuthError(error);
-    }
-
-    if (error is PostgrestException) {
-      return _handleSupabaseDataError(error);
-    }
-
     // Validation errors
     if (error is ValidationException) {
       return ValidationFailure.fromFields(error.fieldErrors);
@@ -84,55 +74,6 @@ class ErrorHandler {
 
     // Unknown error
     return UnknownFailure.fromException(error);
-  }
-
-  /// Handle Supabase Auth errors
-  static Failure _handleSupabaseAuthError(AuthApiException error) {
-    if (error.statusCode == 400) {
-      if (error.message.contains('Invalid login credentials')) {
-        return AuthFailure.invalidCredentials();
-      }
-      if (error.message.contains('already registered')) {
-        return AuthFailure.emailAlreadyExists();
-      }
-    }
-
-    if (error.statusCode == 401) {
-      return AuthFailure.sessionExpired();
-    }
-
-    if (error.statusCode == 403) {
-      return AuthFailure.unauthorized();
-    }
-
-    return AuthFailure(
-      message: error.message,
-      code: error.statusCode,
-      originalError: error,
-    );
-  }
-
-  /// Handle Supabase Data errors
-  static Failure _handleSupabaseDataError(PostgrestException error) {
-    if (error.code == 'PGRST116') {
-      // No rows returned
-      return DataFailure.notFound();
-    }
-
-    if (error.code?.startsWith('23') ?? false) {
-      // Database constraint violation
-      return DataFailure(
-        message: 'Data integrity error. Please check your input.',
-        code: error.code,
-        originalError: error,
-      );
-    }
-
-    return DataFailure(
-      message: error.message,
-      code: error.code,
-      originalError: error,
-    );
   }
 
   /// Show error to user via SnackBar

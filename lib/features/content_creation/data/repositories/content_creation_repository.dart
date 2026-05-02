@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:personal_branding_app/core/network/api_client.dart';
 import 'package:personal_branding_app/core/utils/result.dart';
 import 'package:personal_branding_app/core/errors/failures.dart';
 import 'package:personal_branding_app/core/errors/error_handler.dart';
-import 'package:personal_branding_app/core/errors/exceptions.dart';
 import 'package:personal_branding_app/core/services/i_ai_service.dart'; // Gunakan Interface
 
 import 'package:personal_branding_app/features/content_creation/data/models/generated_script.dart';
@@ -12,10 +11,10 @@ import 'package:personal_branding_app/features/onboarding/data/models/brand_prof
 import '../../domain/repositories/i_content_creation_repository.dart'; // Import Interface IContentCreationRepository
 
 class ContentCreationRepositoryImpl implements IContentCreationRepository {
-  final SupabaseClient _supabase;
+  final ApiClient _apiClient;
   final IAIService _aiService; // Depend on Interface
 
-  ContentCreationRepositoryImpl(this._supabase, this._aiService);
+  ContentCreationRepositoryImpl(this._apiClient, this._aiService);
 
   @override
   Future<Result<Map<String, dynamic>, Failure>> generateContentIdeas({
@@ -48,8 +47,7 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
         final parsedIdeas = _parseResponse(rawText);
 
         if (parsedIdeas != null) {
-          // Simpan ke Supabase (Fire and forget, atau await jika kritis)
-          await _saveIdeasToSupabase(parsedIdeas, pillar);
+          await _saveIdeasToBackend(parsedIdeas, pillar);
         }
 
         return {
@@ -97,15 +95,14 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
   // --- CRUD Methods (Wrapped in Result) ---
 
   @override
-  Future<Result<void, Failure>> saveGeneratedScript(GeneratedScript script) async {
+  Future<Result<void, Failure>> saveGeneratedScript(
+      GeneratedScript script) async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw AuthException("User not found");
-
-      final data = script.toJson();
-      data['user_id'] = user.id;
-
-      await _supabase.from('generated_scripts').insert(data);
+      await _apiClient.ensureGuestSession();
+      final data = script.toJson()
+        ..remove('id')
+        ..remove('created_at');
+      await _apiClient.post('/generated-scripts', body: data);
       return const Success(null);
     } catch (e) {
       return ResultFailure(ErrorHandler.handleException(e));
@@ -115,19 +112,14 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
   @override
   Future<Result<List<GeneratedScript>, Failure>> getGeneratedScripts() async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return const Success([]);
+      if (!_apiClient.isAuthenticated) return const Success([]);
 
-      final response = await _supabase
-          .from('generated_scripts')
-          .select()
-          .eq('user_id', user.id)
-          .order('created_at', ascending: false);
+      final response = await _apiClient.get('/generated-scripts');
+      final data = response['data'] as List? ?? [];
 
-      final scripts = (response as List)
-          .map((item) => GeneratedScript.fromJson(item))
-          .toList();
-      
+      final scripts =
+          data.map((item) => GeneratedScript.fromJson(item)).toList();
+
       return Success(scripts);
     } catch (e) {
       return ResultFailure(ErrorHandler.handleException(e));
@@ -137,7 +129,7 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
   @override
   Future<Result<void, Failure>> deleteGeneratedScript(String scriptId) async {
     try {
-      await _supabase.from('generated_scripts').delete().eq('id', scriptId);
+      await _apiClient.delete('/generated-scripts/$scriptId');
       return const Success(null);
     } catch (e) {
       return ResultFailure(ErrorHandler.handleException(e));
@@ -146,26 +138,24 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
 
   // --- Helper Methods ---
 
-  Future<void> _saveIdeasToSupabase(
+  Future<void> _saveIdeasToBackend(
       List<ContentIdea> ideas, String pillar) async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return;
-
       final List<Map<String, dynamic>> data = ideas.map((idea) {
         return {
-          'user_id': user.id,
-          'pillar': pillar,
           'title': idea.title,
           'angle': idea.angle,
           'content_overview': idea.contentOverview,
           'viral_potential': idea.viralPotential,
           'insight': idea.insight,
-          'created_at': DateTime.now().toIso8601String(),
+          'platform': idea.platform,
         };
       }).toList();
 
-      await _supabase.from('content_ideas').insert(data);
+      await _apiClient.post('/content-ideas', body: {
+        'pillar': pillar,
+        'ideas': data,
+      });
     } catch (e) {
       print("Warning: Failed to save backup ideas: $e");
       // Tidak melempar error agar user tetap melihat hasil generate
@@ -174,9 +164,10 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
 
   List<ContentIdea>? _parseResponse(String text) {
     try {
-      String cleanText = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      String cleanText =
+          text.replaceAll('```json', '').replaceAll('```', '').trim();
       final jsonMatch = RegExp(r'\[[\s\S]*\]').firstMatch(cleanText);
-      
+
       if (jsonMatch == null) return null;
 
       final jsonString = jsonMatch.group(0)!;

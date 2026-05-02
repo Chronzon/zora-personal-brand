@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/content_creation/presentation/providers/content_creation_provider.dart';
 import 'package:personal_branding_app/features/dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/language_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    final session = Supabase.instance.client.auth.currentSession;
+    final session = context.read<AuthProvider>().currentUser;
 
     if (session != null) {
       // Logic User Lama (Tetap sama)
