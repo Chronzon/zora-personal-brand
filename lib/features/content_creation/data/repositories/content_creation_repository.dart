@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:personal_branding_app/core/network/api_client.dart';
 import 'package:personal_branding_app/core/utils/result.dart';
 import 'package:personal_branding_app/core/errors/failures.dart';
 import 'package:personal_branding_app/core/errors/error_handler.dart';
+import 'package:personal_branding_app/core/errors/exceptions.dart';
 import 'package:personal_branding_app/core/services/i_ai_service.dart'; // Gunakan Interface
 
 import 'package:personal_branding_app/features/content_creation/data/models/generated_script.dart';
@@ -41,19 +43,25 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
         languageCode: languageCode,
       );
 
-      // 2. Map hasilnya (Functional style)
-      return await aiResult.mapAsync((data) async {
-        final rawText = data['result'] as String;
-        final parsedIdeas = _parseResponse(rawText);
+      if (aiResult.isFailure) {
+        return ResultFailure(aiResult.failure);
+      }
 
-        if (parsedIdeas != null) {
-          await _saveIdeasToBackend(parsedIdeas, pillar);
-        }
+      final rawText = aiResult.success['result'] as String? ?? '';
+      final parsedIdeas = _parseResponse(rawText);
 
-        return {
-          'rawResponse': rawText,
-          'parsedIdeas': parsedIdeas ?? [],
-        };
+      if (parsedIdeas == null || parsedIdeas.isEmpty) {
+        throw DataException(
+          'AI returned ideas in an unexpected format. Please try again.',
+          code: 'INVALID_AI_IDEAS',
+        );
+      }
+
+      await _saveIdeasToBackend(parsedIdeas, pillar);
+
+      return Success({
+        'rawResponse': rawText,
+        'parsedIdeas': parsedIdeas,
       });
     } catch (e) {
       return ResultFailure(ErrorHandler.handleException(e));
@@ -117,8 +125,10 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
       final response = await _apiClient.get('/generated-scripts');
       final data = response['data'] as List? ?? [];
 
-      final scripts =
-          data.map((item) => GeneratedScript.fromJson(item)).toList();
+      final scripts = data
+          .whereType<Map<String, dynamic>>()
+          .map(GeneratedScript.fromJson)
+          .toList();
 
       return Success(scripts);
     } catch (e) {
@@ -157,25 +167,52 @@ class ContentCreationRepositoryImpl implements IContentCreationRepository {
         'ideas': data,
       });
     } catch (e) {
-      print("Warning: Failed to save backup ideas: $e");
+      debugPrint("Warning: Failed to save backup ideas: $e");
       // Tidak melempar error agar user tetap melihat hasil generate
     }
   }
 
   List<ContentIdea>? _parseResponse(String text) {
     try {
-      String cleanText =
-          text.replaceAll('```json', '').replaceAll('```', '').trim();
-      final jsonMatch = RegExp(r'\[[\s\S]*\]').firstMatch(cleanText);
+      final cleanText = text
+          .replaceAll(RegExp(r'```(?:json)?', caseSensitive: false), '')
+          .replaceAll('```', '')
+          .trim();
 
-      if (jsonMatch == null) return null;
+      final decoded = _decodeIdeasPayload(cleanText);
+      if (decoded == null) return null;
 
-      final jsonString = jsonMatch.group(0)!;
-      final List<dynamic> jsonList = json.decode(jsonString);
+      final jsonList = switch (decoded) {
+        List<dynamic> list => list,
+        Map<String, dynamic> map when map['ideas'] is List<dynamic> =>
+          map['ideas'] as List<dynamic>,
+        Map<String, dynamic> map when map['data'] is List<dynamic> =>
+          map['data'] as List<dynamic>,
+        Map<String, dynamic> map when map['content_ideas'] is List<dynamic> =>
+          map['content_ideas'] as List<dynamic>,
+        _ => null,
+      };
 
-      return jsonList.map((item) => ContentIdea.fromJson(item)).toList();
+      if (jsonList == null) return null;
+
+      return jsonList
+          .whereType<Map<String, dynamic>>()
+          .map(ContentIdea.fromJson)
+          .where((idea) => idea.title.trim().isNotEmpty)
+          .toList();
     } catch (e) {
       return null;
+    }
+  }
+
+  dynamic _decodeIdeasPayload(String text) {
+    try {
+      return json.decode(text);
+    } on FormatException {
+      final jsonMatch = RegExp(r'\[[\s\S]*\]').firstMatch(text) ??
+          RegExp(r'\{[\s\S]*\}').firstMatch(text);
+      if (jsonMatch == null) return null;
+      return json.decode(jsonMatch.group(0)!);
     }
   }
 }

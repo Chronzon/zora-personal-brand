@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'settings_screen.dart';
 import '../widgets/home_tab.dart';
 import '../widgets/strategy_tab.dart';
 import '../widgets/content_tab.dart';
@@ -76,7 +77,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         padding: const EdgeInsets.only(bottom: 20.0),
                         child: IconButton(
                           icon: const Icon(Icons.settings_outlined),
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -97,7 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -109,7 +117,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   setState(() => _selectedIndex = index);
                 },
                 backgroundColor: Colors.white,
-                indicatorColor: purpleColor.withOpacity(0.2),
+                indicatorColor: purpleColor.withValues(alpha: 0.2),
                 destinations: _destinations,
               ),
             ),

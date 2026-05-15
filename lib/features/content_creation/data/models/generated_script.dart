@@ -19,14 +19,14 @@ class GeneratedScript {
 
   factory GeneratedScript.fromJson(Map<String, dynamic> json) {
     return GeneratedScript(
-      id: json['id'] ?? '',
+      id: json['id']?.toString() ?? '',
       title: json['title'] ?? '',
       platform: json['platform'] ?? 'Multi-Platform',
       script: json['script'] ?? '',
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
-      originalIdeaId: json['original_idea_id'],
+      originalIdeaId: json['original_idea_id']?.toString(),
       pillar: json['pillar'] ?? '',
     );
   }

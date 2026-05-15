@@ -18,12 +18,8 @@ abstract class Result<S, F> {
   /// Execute async function if success
   Future<Result<T, F>> mapAsync<T>(Future<T> Function(S) mapper) async {
     if (isSuccess) {
-      try {
-        final result = await mapper(success);
-        return Success(result);
-      } catch (e) {
-        return ResultFailure(failure);
-      }
+      final result = await mapper(success);
+      return Success(result);
     }
     return ResultFailure(failure);
   }

@@ -13,14 +13,14 @@ class ContentController extends Controller
     public function storeIdeas(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'pillar' => ['nullable', 'string'],
-            'ideas' => ['required', 'array'],
-            'ideas.*.title' => ['nullable', 'string'],
+            'pillar' => ['nullable', 'string', 'max:255'],
+            'ideas' => ['required', 'array', 'max:50'],
+            'ideas.*.title' => ['nullable', 'string', 'max:255'],
             'ideas.*.angle' => ['nullable', 'string'],
             'ideas.*.content_overview' => ['nullable', 'string'],
-            'ideas.*.viral_potential' => ['nullable', 'string'],
+            'ideas.*.viral_potential' => ['nullable', 'string', 'max:255'],
             'ideas.*.insight' => ['nullable', 'string'],
-            'ideas.*.platform' => ['nullable', 'string'],
+            'ideas.*.platform' => ['nullable', 'string', 'max:255'],
         ]);
 
         $ideas = collect($data['ideas'])->map(fn (array $idea) => ContentIdea::query()->create([
@@ -50,11 +50,11 @@ class ContentController extends Controller
     public function storeScript(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'title' => ['required', 'string'],
-            'platform' => ['nullable', 'string'],
+            'title' => ['required', 'string', 'max:255'],
+            'platform' => ['nullable', 'string', 'max:255'],
             'script' => ['required', 'string'],
-            'original_idea_id' => ['nullable', 'string'],
-            'pillar' => ['nullable', 'string'],
+            'original_idea_id' => ['nullable', 'string', 'max:255'],
+            'pillar' => ['nullable', 'string', 'max:255'],
         ]);
 
         $script = GeneratedScript::query()->create($data + [

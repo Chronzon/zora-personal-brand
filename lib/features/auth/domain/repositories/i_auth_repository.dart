@@ -9,6 +9,8 @@ class AuthResult {
 abstract class AuthRepository {
   ApiUser? get currentUser;
 
+  Future<bool> restoreSession();
+
   Future<AuthResult> signIn({
     required String email,
     required String password,

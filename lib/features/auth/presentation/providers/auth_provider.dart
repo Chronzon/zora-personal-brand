@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_branding_app/core/errors/error_handler.dart';
 import 'package:personal_branding_app/core/network/api_client.dart';
 import 'package:personal_branding_app/features/auth/domain/repositories/i_auth_repository.dart';
 
@@ -16,16 +17,30 @@ class AuthProvider extends ChangeNotifier {
   ApiUser? get currentUser => _repository.currentUser;
 
   // Actions
+  Future<bool> restoreSession() async {
+    try {
+      final restored = await _repository.restoreSession();
+      notifyListeners();
+      return restored;
+    } catch (e, stackTrace) {
+      final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
+      _errorMessage = failure.message;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> signIn(String email, String password) async {
     _setLoading(true);
     try {
       await _repository.signIn(email: email, password: password);
-      _setLoading(false);
       return true; // Sukses
-    } catch (e) {
-      _errorMessage = e.toString();
-      _setLoading(false);
+    } catch (e, stackTrace) {
+      final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
+      _errorMessage = failure.message;
       return false; // Gagal
+    } finally {
+      _setLoading(false, clearError: false);
     }
   }
 
@@ -34,12 +49,13 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _repository.signUp(
           email: email, password: password, fullName: fullName);
-      _setLoading(false);
       return true; // Sukses
-    } catch (e) {
-      _errorMessage = e.toString();
-      _setLoading(false);
+    } catch (e, stackTrace) {
+      final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
+      _errorMessage = failure.message;
       return false; // Gagal
+    } finally {
+      _setLoading(false, clearError: false);
     }
   }
 
@@ -52,18 +68,21 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       await _repository.signInWithGoogle();
-      _setLoading(false);
       return true; // Sukses
-    } catch (e) {
-      _errorMessage = e.toString();
-      _setLoading(false);
+    } catch (e, stackTrace) {
+      final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
+      _errorMessage = failure.message;
       return false; // Gagal
+    } finally {
+      _setLoading(false, clearError: false);
     }
   }
 
-  void _setLoading(bool value) {
+  void _setLoading(bool value, {bool clearError = true}) {
     _isLoading = value;
-    _errorMessage = null; // Reset error saat loading mulai
+    if (clearError) {
+      _errorMessage = null; // Reset error saat loading mulai
+    }
     notifyListeners();
   }
 }

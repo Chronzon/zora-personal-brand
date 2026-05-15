@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:personal_branding_app/core/network/api_client.dart';
 import 'failures.dart';
 import 'exceptions.dart';
 
@@ -24,6 +25,25 @@ class ErrorHandler {
         return NetworkFailure.timeout();
       }
       return NetworkFailure(message: error.message, code: error.code);
+    }
+
+    if (error is ApiException) {
+      if (error.statusCode == 401) {
+        return AuthFailure.sessionExpired();
+      }
+      if (error.statusCode != null && error.statusCode! >= 500) {
+        return ServerFailure(
+          message: error.message,
+          code: 'SERVER_ERROR',
+          statusCode: error.statusCode,
+          originalError: error,
+        );
+      }
+      return DataFailure(
+        message: error.message,
+        code: 'API_ERROR',
+        originalError: error,
+      );
     }
 
     // AI Service errors

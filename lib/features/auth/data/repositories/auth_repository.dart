@@ -1,4 +1,5 @@
 import 'package:personal_branding_app/core/network/api_client.dart';
+import 'package:personal_branding_app/core/errors/exceptions.dart';
 import 'package:personal_branding_app/features/auth/domain/repositories/i_auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -8,6 +9,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   ApiUser? get currentUser => _apiClient.currentUser;
+
+  @override
+  Future<bool> restoreSession() {
+    return _apiClient.restoreSession();
+  }
 
   @override
   Future<AuthResult> signIn({
@@ -54,23 +60,36 @@ class AuthRepositoryImpl implements AuthRepository {
         await _apiClient.post('/logout');
       }
     } finally {
-      _apiClient.clearSession();
+      await _apiClient.clearSession();
     }
   }
 
   @override
   Future<bool> signInWithGoogle() async {
-    throw 'Google login belum tersedia di backend Laravel lokal.';
+    throw DomainAuthException(
+      'Google login belum tersedia di backend Laravel lokal.',
+      code: 'GOOGLE_LOGIN_UNAVAILABLE',
+    );
   }
 
-  String _handleError(dynamic error) {
+  Object _handleError(dynamic error) {
+    if (error is DomainAuthException) return error;
+    if (error is NetworkException || error is DataException) return error;
+    if (error is ApiException && error.statusCode != 422) return error;
+
     final message = error.toString();
     if (message.contains('Email atau password salah')) {
-      return 'Email atau password salah.';
+      return DomainAuthException(
+        'Email atau password salah.',
+        code: 'INVALID_CREDENTIALS',
+      );
     }
     if (message.contains('has already been taken')) {
-      return 'Email ini sudah terdaftar. Silakan login.';
+      return DomainAuthException(
+        'Email ini sudah terdaftar. Silakan login.',
+        code: 'EMAIL_EXISTS',
+      );
     }
-    return message;
+    return DomainAuthException(message);
   }
 }

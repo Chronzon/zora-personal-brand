@@ -25,7 +25,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    final session = context.read<AuthProvider>().currentUser;
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.restoreSession();
+
+    if (!mounted) return;
+
+    final session = authProvider.currentUser;
 
     if (session != null) {
       // Logic User Lama (Tetap sama)

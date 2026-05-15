@@ -45,17 +45,18 @@ class ProfileController extends Controller
     public function saveBrandProfile(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'selected_profile_name' => ['nullable', 'string'],
-            'selected_category' => ['nullable', 'string'],
-            'selected_micro_niche' => ['nullable', 'string'],
+            'selected_profile_name' => ['nullable', 'string', 'max:255'],
+            'selected_category' => ['nullable', 'string', 'max:255'],
+            'selected_micro_niche' => ['nullable', 'string', 'max:255'],
             'selected_premise' => ['nullable', 'string'],
-            'tone_of_voice' => ['nullable', 'string'],
+            'tone_of_voice' => ['nullable', 'string', 'max:255'],
             'target_audience' => ['nullable', 'string'],
             'strengths' => ['nullable', 'string'],
             'weaknesses' => ['nullable', 'string'],
             'opportunities' => ['nullable', 'string'],
             'threats' => ['nullable', 'string'],
             'content_pillars' => ['nullable', 'array'],
+            'content_pillars.*' => ['string', 'max:255'],
         ]);
 
         $profile = BrandProfile::query()->updateOrCreate(

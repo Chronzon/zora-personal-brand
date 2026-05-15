@@ -21,13 +21,13 @@ class ContentCreationProvider extends ChangeNotifier {
   Failure? _failure; // Menyimpan error state
 
   int _guestUsageCount = 0;
-  static const int REMINDER_INTERVAL = 5;
+  static const int reminderInterval = 5;
 
   // Getter
   Failure? get failure => _failure;
 
   bool get shouldShowGuestReminder {
-    return _guestUsageCount > 0 && (_guestUsageCount % REMINDER_INTERVAL == 0);
+    return _guestUsageCount > 0 && (_guestUsageCount % reminderInterval == 0);
   }
 
   void incrementGuestUsage() {
@@ -47,22 +47,24 @@ class ContentCreationProvider extends ChangeNotifier {
     isLoadingScripts = true;
     _failure = null;
     // Hindari notifyListeners di sini jika dipanggil saat init app
-    
-    final result = await _repository.getGeneratedScripts();
 
-    // Buka bungkusan Result
-    result.fold(
-      onSuccess: (scripts) {
-        generatedScripts = scripts;
-      },
-      onFailure: (f) {
-        _failure = f;
-        print("Error loading scripts: ${f.message}");
-      },
-    );
+    try {
+      final result = await _repository.getGeneratedScripts();
 
-    isLoadingScripts = false;
-    notifyListeners();
+      // Buka bungkusan Result
+      result.fold(
+        onSuccess: (scripts) {
+          generatedScripts = scripts;
+        },
+        onFailure: (f) {
+          _failure = f;
+          debugPrint("Error loading scripts: ${f.message}");
+        },
+      );
+    } finally {
+      isLoadingScripts = false;
+      notifyListeners();
+    }
   }
 
   // Actions
@@ -77,7 +79,7 @@ class ContentCreationProvider extends ChangeNotifier {
       id: _generateId(),
       selectedPillar: pillar,
       ideaCount: ideaCount,
-      isLoading: true,
+      isLoading: false,
       generatedIdeas: null,
     );
     contentFactories.add(newItem);
@@ -107,39 +109,44 @@ class ContentCreationProvider extends ChangeNotifier {
     if (index == -1) return;
 
     final factory = contentFactories[index];
+    if (factory.isLoading) return;
+
     factory.isLoading = true;
     factory.generatedIdeas = null; // Reset error sebelumnya
     notifyListeners();
 
-    final BrandProfile brandProfile = _onboardingProvider.brandProfile;
+    try {
+      final BrandProfile brandProfile = _onboardingProvider.brandProfile;
 
-    final result = await _repository.generateContentIdeas(
-      pillar: factory.selectedPillar ?? '',
-      ideaCount: factory.ideaCount,
-      brandProfile: brandProfile,
-      languageCode: languageCode,
-    );
+      final result = await _repository.generateContentIdeas(
+        pillar: factory.selectedPillar ?? '',
+        ideaCount: factory.ideaCount,
+        brandProfile: brandProfile,
+        languageCode: languageCode,
+      );
 
-    // Buka bungkusan Result
-    result.fold(
-      onSuccess: (data) {
-        factory.generatedIdeas = data['rawResponse'];
-        factory.ideas = data['parsedIdeas'];
-      },
-      onFailure: (f) {
-        factory.generatedIdeas = "Error: ${f.message}";
-        factory.ideas = null;
-      },
-    );
-
-    factory.isLoading = false;
-    notifyListeners();
+      // Buka bungkusan Result
+      result.fold(
+        onSuccess: (data) {
+          factory.generatedIdeas = data['rawResponse'];
+          factory.ideas = data['parsedIdeas'];
+        },
+        onFailure: (f) {
+          _failure = f;
+          factory.generatedIdeas = "Error: ${f.message}";
+          factory.ideas = null;
+        },
+      );
+    } finally {
+      factory.isLoading = false;
+      notifyListeners();
+    }
   }
 
   // --- REFACTORED: generateScript ---
   Future<GeneratedScript?> generateScript(
       ContentIdea idea, String pillar, String languageCode) async {
-    
+    _failure = null;
     final BrandProfile brandProfile = _onboardingProvider.brandProfile;
     GeneratedScript? resultScript;
 
@@ -173,12 +180,12 @@ class ContentCreationProvider extends ChangeNotifier {
           resultScript = script;
         } else {
           // Handle jika gagal save (misal koneksi putus saat save)
-          print("Failed to save script: ${saveResult.failure.message}");
+          debugPrint("Failed to save script: ${saveResult.failure.message}");
           _failure = saveResult.failure;
         }
       },
       onFailure: (f) async {
-        print("Error generating script AI: ${f.message}");
+        debugPrint("Error generating script AI: ${f.message}");
         _failure = f;
       },
     );
@@ -202,10 +209,10 @@ class ContentCreationProvider extends ChangeNotifier {
 
     // 3. Jika Gagal, Kembalikan data (Rollback)
     if (result.isFailure) {
-      print("Gagal menghapus dari DB: ${result.failure.message}");
+      debugPrint("Gagal menghapus dari DB: ${result.failure.message}");
       generatedScripts.insert(index, deletedScript);
       notifyListeners();
-      
+
       // Opsional: Set global failure untuk menampilkan snackbar di UI
       _failure = result.failure;
       notifyListeners();
