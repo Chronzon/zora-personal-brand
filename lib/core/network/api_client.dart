@@ -54,7 +54,7 @@ class ApiClient {
       : baseUrl = (dotenv.env['API_BASE_URL'] ?? 'http://127.0.0.1:8000/api')
             .replaceFirst(RegExp(r'/$'), '');
 
-  static const Duration _requestTimeout = Duration(seconds: 20);
+  static const Duration _requestTimeout = Duration(seconds: 120);
   static const String _tokenKey = 'api_token';
   static const String _userKey = 'api_user';
 

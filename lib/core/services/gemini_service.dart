@@ -9,7 +9,7 @@ class GeminiService implements IAIService {
   final ApiClient _apiClient;
   static const int _maxRetries = 3;
   static const Duration _timeout =
-      Duration(seconds: 45); // Sedikit lebih lama untuk AI
+      Duration(seconds: 120); // Real AI providers can take longer than mocks.
 
   GeminiService(this._apiClient);
 

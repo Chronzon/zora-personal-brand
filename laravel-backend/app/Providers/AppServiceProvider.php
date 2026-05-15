@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Ai\AiClientFactory;
+use App\Services\Ai\AiClientInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +13,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AiClientInterface::class, function () {
+            return (new AiClientFactory)->make();
+        });
     }
 
     /**

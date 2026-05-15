@@ -42,11 +42,23 @@
 <body>
   <script>
     window.addEventListener('load', function(ev) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+          return Promise.all(cacheNames.map(function(cacheName) {
+            return caches.delete(cacheName);
+          }));
+        });
+      }
+
       // Download main.dart.js
       _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
         onEntrypointLoaded: function(engineInitializer) {
           engineInitializer.initializeEngine().then(function(appRunner) {
             appRunner.runApp();
