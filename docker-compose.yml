@@ -1,0 +1,59 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        API_BASE_URL: http://localhost:8000/api
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_started
+
+  backend:
+    build:
+      context: ./laravel-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    environment:
+      APP_NAME: "Personal Branding API"
+      APP_ENV: production
+      APP_KEY: ${LARAVEL_APP_KEY:-base64:/LFxv3rcoviRnyL3mHJ2jnjCS3u1oa42+CWD9VRIGRM=}
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8000
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: info
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: personal_branding_app
+      DB_USERNAME: personal_branding_app
+      DB_PASSWORD: personal_branding_app
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: personal_branding_app
+      MYSQL_USER: personal_branding_app
+      MYSQL_PASSWORD: personal_branding_app
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mysql-data:
