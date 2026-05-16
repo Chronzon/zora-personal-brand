@@ -17,6 +17,20 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
 
   OnboardingRepositoryImpl(this._apiClient, this._aiService);
 
+  ResultFailure<T, Failure> _authRequiredFailure<T>() {
+    return const ResultFailure(
+      AuthFailure(
+        message: 'Please sign in before starting your brand setup.',
+        code: 'AUTH_REQUIRED',
+      ),
+    );
+  }
+
+  bool get _hasRealUser {
+    final user = _apiClient.currentUser;
+    return _apiClient.isAuthenticated && user != null && !user.isAnonymous;
+  }
+
   @override
   Future<Result<UserProfile, Failure>> getUserProfile() async {
     try {
@@ -39,7 +53,8 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
   @override
   Future<Result<void, Failure>> saveUserProfile(UserProfile profile) async {
     try {
-      await _apiClient.ensureGuestSession();
+      if (!_hasRealUser) return _authRequiredFailure<void>();
+
       await _apiClient.put('/user-profile', body: profile.toJson());
 
       return const Success(null);
@@ -67,7 +82,8 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
   @override
   Future<Result<void, Failure>> saveBrandProfile(BrandProfile profile) async {
     try {
-      await _apiClient.ensureGuestSession();
+      if (!_hasRealUser) return _authRequiredFailure<void>();
+
       await _apiClient.put('/brand-profile', body: profile.toJson());
 
       return const Success(null);
@@ -127,6 +143,8 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
     required String languageCode,
   }) async {
     try {
+      if (!_hasRealUser) return _authRequiredFailure<Map<String, dynamic>>();
+
       final payload = {
         'selectedProfileName': brandProfile.selectedProfileName,
         'selectedCategory': brandProfile.selectedCategory,
@@ -163,7 +181,10 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
     required String languageCode,
   }) async {
     try {
-      await saveBrandProfile(brandProfile);
+      if (!_hasRealUser) return _authRequiredFailure<Map<String, dynamic>>();
+
+      final saveResult = await saveBrandProfile(brandProfile);
+      if (saveResult.isFailure) return ResultFailure(saveResult.failure);
 
       final payload = {
         'selectedProfileName': brandProfile.selectedProfileName,
@@ -195,7 +216,8 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
 
   // --- PRIVATE PARSING HELPERS (Diambil dari logika lama Anda) ---
 
-  Map<String, dynamic> _parseIdentityResponse(String text, String languageCode) {
+  Map<String, dynamic> _parseIdentityResponse(
+      String text, String languageCode) {
     String cleanText =
         text.replaceAll('```json', '').replaceAll('```', '').trim();
     final Map<String, dynamic> jsonData = json.decode(cleanText);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../onboarding/presentation/pages/name_screen.dart';
 import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -17,69 +18,156 @@ class StrategyTab extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isTablet = constraints.maxWidth > 700;
+      body: onboardingProvider.isOnboardingComplete
+          ? LayoutBuilder(
+              builder: (context, constraints) {
+                final isTablet = constraints.maxWidth > 700;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // --- Bagian Atas: Audience & Monetization ---
-                if (isTablet)
-                  Row(
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                          child: _buildSectionGroup(
-                              'Target Audience',
-                              onboardingProvider.brandProfile.targetAudience,
-                              Icons.groups_outlined)),
-                      const SizedBox(width: 24),
-                      Expanded(
-                          child: _buildSectionGroup(
-                              'Monetization',
-                              onboardingProvider.brandProfile.opportunities,
-                              Icons.attach_money)),
-                    ],
-                  )
-                else
-                  Column(
-                    children: [
-                      _buildSectionGroup(
-                          'Target Audience',
-                          onboardingProvider.brandProfile.targetAudience,
-                          Icons.groups_outlined),
+                      // --- Bagian Atas: Audience & Monetization ---
+                      if (isTablet)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                                child: _buildSectionGroup(
+                                    'Target Audience',
+                                    onboardingProvider
+                                        .brandProfile.targetAudience,
+                                    Icons.groups_outlined)),
+                            const SizedBox(width: 24),
+                            Expanded(
+                                child: _buildSectionGroup(
+                                    'Monetization',
+                                    onboardingProvider
+                                        .brandProfile.opportunities,
+                                    Icons.attach_money)),
+                          ],
+                        )
+                      else
+                        Column(
+                          children: [
+                            _buildSectionGroup(
+                                'Target Audience',
+                                onboardingProvider.brandProfile.targetAudience,
+                                Icons.groups_outlined),
+                            const SizedBox(height: 24),
+                            _buildSectionGroup(
+                                'Monetization',
+                                onboardingProvider.brandProfile.opportunities,
+                                Icons.attach_money),
+                          ],
+                        ),
+
+                      const SizedBox(height: 32),
+                      const Divider(),
                       const SizedBox(height: 24),
-                      _buildSectionGroup(
-                          'Monetization',
-                          onboardingProvider.brandProfile.opportunities,
-                          Icons.attach_money),
+
+                      // --- Bagian Bawah: SWOT Analysis ---
+                      const Text(
+                        'SWOT ANALYSIS',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                            letterSpacing: 1.2),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Grid SWOT yang responsif
+                      _buildSwotGrid(onboardingProvider, isTablet),
                     ],
                   ),
+                );
+              },
+            )
+          : _buildIncompleteState(context),
+    );
+  }
 
-                const SizedBox(height: 32),
-                const Divider(),
-                const SizedBox(height: 24),
+  Widget _buildIncompleteState(BuildContext context) {
+    const purpleColor = Color(0xFF8A53FF);
 
-                // --- Bagian Bawah: SWOT Analysis ---
-                const Text(
-                  'SWOT ANALYSIS',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 1.2),
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: purpleColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.map_outlined,
+                    color: purpleColor,
+                    size: 34,
+                  ),
                 ),
-                const SizedBox(height: 16),
-
-                // Grid SWOT yang responsif
-                _buildSwotGrid(onboardingProvider, isTablet),
+                const SizedBox(height: 18),
+                const Text(
+                  'Your brand strategy is not complete yet.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Complete your setup to unlock your audience, monetization, SWOT, and content pillar strategy.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const NameScreen(showBackButton: false),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                    label: const Text('Continue Setup'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: purpleColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

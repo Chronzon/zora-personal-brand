@@ -6,6 +6,7 @@ import 'package:personal_branding_app/features/content_creation/presentation/pag
 import 'package:personal_branding_app/features/content_creation/presentation/providers/content_creation_provider.dart';
 import 'package:personal_branding_app/features/content_creation/presentation/widgets/create_idea_sheet.dart';
 import 'package:personal_branding_app/features/dashboard/presentation/pages/settings_screen.dart';
+import 'package:personal_branding_app/features/onboarding/presentation/pages/name_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -30,6 +31,14 @@ class _HomeTabState extends State<HomeTab> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const CreateIdeaSheet(),
+    );
+  }
+
+  void _openBrandSetup(BuildContext context, {required bool showBackButton}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => NameScreen(showBackButton: showBackButton),
+      ),
     );
   }
 
@@ -111,6 +120,7 @@ class _HomeTabState extends State<HomeTab> {
     const purpleColor = Color(0xFF8A53FF);
 
     final user = onboardingProvider.userProfile;
+    final isOnboardingComplete = onboardingProvider.isOnboardingComplete;
 
     final firstName =
         user.fullName.isNotEmpty ? user.fullName.split(' ').first : 'Creator';
@@ -189,8 +199,13 @@ class _HomeTabState extends State<HomeTab> {
 
               const SizedBox(height: 32),
 
-              // 2. Daily Spark Card
-              _buildDailySparkCard(_dailyPillar ?? "General", purpleColor),
+              if (!isOnboardingComplete)
+                _buildIncompleteSetupCard(context, purpleColor)
+              else ...[
+                _buildDailySparkCard(_dailyPillar ?? "General", purpleColor),
+                const SizedBox(height: 16),
+                _buildUpdateStrategyButton(context, purpleColor),
+              ],
 
               const SizedBox(height: 24),
 
@@ -340,6 +355,114 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   // --- WIDGETS UPDATE ---
+
+  Widget _buildIncompleteSetupCard(BuildContext context, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.flag_outlined, color: color, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Your brand strategy is not complete yet.",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      "Complete your setup so Zora can personalize your content ideas and scripts.",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        height: 1.45,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _openBrandSetup(
+                context,
+                showBackButton: false,
+              ),
+              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+              label: const Text("Continue Setup"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                textStyle: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpdateStrategyButton(BuildContext context, Color color) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () => _openBrandSetup(context, showBackButton: true),
+        icon: const Icon(Icons.tune_rounded, size: 18),
+        label: const Text("Update Brand Strategy"),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: color,
+          side: BorderSide(color: color.withOpacity(0.35)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildActionCard({
     required String title,

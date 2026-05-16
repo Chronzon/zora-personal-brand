@@ -1,30 +1,85 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:personal_branding_app/core/network/api_client.dart';
+import 'package:personal_branding_app/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:personal_branding_app/features/auth/presentation/pages/login_screen.dart';
+import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_branding_app/features/onboarding/presentation/pages/welcome_screen.dart';
+import 'package:provider/provider.dart';
 
-import 'package:personal_branding_app/main.dart';
+class FakeAuthRepository implements AuthRepository {
+  FakeAuthRepository({this.user});
+
+  ApiUser? user;
+
+  @override
+  ApiUser? get currentUser => user;
+
+  @override
+  Future<bool> restoreSession() async => user != null;
+
+  @override
+  Future<AuthResult> signIn({
+    required String email,
+    required String password,
+  }) async {
+    user = const ApiUser(
+      id: '1',
+      email: 'user@example.com',
+      name: 'User',
+    );
+    return AuthResult(user!);
+  }
+
+  @override
+  Future<AuthResult> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
+    user = ApiUser(
+      id: '1',
+      email: email,
+      name: fullName,
+    );
+    return AuthResult(user!);
+  }
+
+  @override
+  Future<void> signOut() async {
+    user = null;
+  }
+
+  @override
+  Future<bool> signInWithGoogle() async => false;
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  setUpAll(() {
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('welcome start sends unauthenticated users to login',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => AuthProvider(FakeAuthRepository()),
+        child: const MaterialApp(
+          home: WelcomeScreen(),
+        ),
+      ),
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Mulai Branding Sekarang'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.text('Welcome Back! 👋'), findsOneWidget);
   });
 }

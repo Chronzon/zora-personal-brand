@@ -21,6 +21,7 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
   final _whatYouDoController = TextEditingController();
   final _coreValueController = TextEditingController();
   final _differentiatorsController = TextEditingController();
+  final _revenueModelController = TextEditingController();
 
   bool _isButtonEnabled = false;
   bool _isLoading = false;
@@ -28,10 +29,17 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
   @override
   void initState() {
     super.initState();
+    final userProfile = context.read<OnboardingProvider>().userProfile;
+    _whatYouDoController.text = userProfile.whatILove;
+    _coreValueController.text = userProfile.whatImGoodAt;
+    _differentiatorsController.text = userProfile.whatTheWorldNeeds;
+    _revenueModelController.text = userProfile.whatICanBePaidFor;
+
     // Tambahkan listener ke setiap controller
     _whatYouDoController.addListener(_validateFields);
     _coreValueController.addListener(_validateFields);
     _differentiatorsController.addListener(_validateFields);
+    _validateFields();
   }
 
   void _validateFields() {
@@ -53,6 +61,7 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
     _whatYouDoController.dispose();
     _coreValueController.dispose();
     _differentiatorsController.dispose();
+    _revenueModelController.dispose();
     super.dispose();
   }
 
@@ -67,7 +76,7 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
       try {
         // Ambil bahasa
         final languageCode = context.read<LocaleProvider>().languageCode;
-        
+
         // Pass ke fungsi
         await Provider.of<OnboardingProvider>(context, listen: false)
             .generateIdentity(languageCode);
@@ -357,6 +366,7 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                                 ),
                                 const SizedBox(height: 24),
                                 AnimatedTextField(
+                                  controller: _revenueModelController,
                                   label: 'Revenue Model (Optional)',
                                   onSaved: (val) =>
                                       provider.whatICanBePaidFor = val!,
@@ -381,6 +391,7 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                                 const SizedBox(width: 24),
                                 Expanded(
                                   child: AnimatedTextField(
+                                    controller: _revenueModelController,
                                     label: 'Revenue Model (Optional)',
                                     onSaved: (val) =>
                                         provider.whatICanBePaidFor = val!,

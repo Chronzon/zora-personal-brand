@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:personal_branding_app/features/auth/presentation/pages/login_screen.dart';
+import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/name_screen.dart';
+import 'package:provider/provider.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -18,17 +20,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final List<Map<String, String>> _onboardingData = [
     {
       "title": "Personal Branding\nBerbasis AI",
-      "desc": "Biarkan AI menganalisis Ikigai Anda dan merancang strategi branding yang 100% unik dan otentik.",
+      "desc":
+          "Biarkan AI menganalisis Ikigai Anda dan merancang strategi branding yang 100% unik dan otentik.",
       "icon": "✨" // Bisa diganti Image Asset nanti
     },
     {
       "title": "Ide Konten Tanpa Batas",
-      "desc": "Jangan pernah kehabisan ide. Dapatkan ratusan ide konten viral yang disesuaikan dengan Niche Anda.",
+      "desc":
+          "Jangan pernah kehabisan ide. Dapatkan ratusan ide konten viral yang disesuaikan dengan Niche Anda.",
       "icon": "💡"
     },
     {
       "title": "Script Siap Posting",
-      "desc": "Dari ide menjadi naskah video TikTok atau Caption Instagram hanya dalam hitungan detik.",
+      "desc":
+          "Dari ide menjadi naskah video TikTok atau Caption Instagram hanya dalam hitungan detik.",
       "icon": "🚀"
     },
   ];
@@ -157,10 +162,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     height: 56,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Navigasi ke NameScreen (Halaman Input Nama)
+                        final user = context.read<AuthProvider>().currentUser;
+                        final hasRealUser = user != null && !user.isAnonymous;
+
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const NameScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => hasRealUser
+                                ? const NameScreen()
+                                : const LoginScreen(showBackButton: true),
+                          ),
                         );
                       },
                       style: ElevatedButton.styleFrom(

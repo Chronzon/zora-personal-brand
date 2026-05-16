@@ -32,29 +32,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final session = authProvider.currentUser;
 
-    if (session != null) {
-      // Logic User Lama (Tetap sama)
-      final hasData = await context.read<OnboardingProvider>().loadUserData();
+    if (session != null && !session.isAnonymous) {
+      await context.read<OnboardingProvider>().loadUserData();
 
       if (mounted) {
         await context.read<ContentCreationProvider>().loadScripts();
       }
 
       if (mounted) {
-        if (hasData) {
-          // 1. Data Lengkap -> Ke Dashboard
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const DashboardScreen()),
-          );
-        } else {
-          // 2. Session Ada TAPI Data Belum Lengkap (User Gantung/Belum Selesai Onboarding)
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const LanguageScreen()),
-          );
-        }
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
       }
     } else {
-      // 3. User Baru (Belum Login) -> Ke LanguageScreen
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const LanguageScreen()),

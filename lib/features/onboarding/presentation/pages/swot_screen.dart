@@ -28,8 +28,13 @@ class _SwotScreenState extends State<SwotScreen> {
   void initState() {
     super.initState();
     // Mengisi nilai awal untuk field kekuatan
+    final onboardingProvider = context.read<OnboardingProvider>();
     _strengthsController.text =
-        context.read<OnboardingProvider>().userProfile.whatImGoodAt;
+        onboardingProvider.brandProfile.strengths.isNotEmpty
+            ? onboardingProvider.brandProfile.strengths
+            : onboardingProvider.userProfile.whatImGoodAt;
+    _weaknessesController.text = onboardingProvider.brandProfile.weaknesses;
+    _threatsController.text = onboardingProvider.brandProfile.threats;
 
     _strengthsController.addListener(_validateFields);
     _weaknessesController.addListener(_validateFields);
@@ -207,14 +212,16 @@ class _SwotScreenState extends State<SwotScreen> {
                             controller: _strengthsController,
                             label: 'Kekuatanmu',
                             hint: '(hal yang dikuasai & bisa dimanfaatkan)',
-                            onSaved: (val) => onboardingProvider.strengths = val!,
+                            onSaved: (val) =>
+                                onboardingProvider.strengths = val!,
                           ),
                           const SizedBox(height: 24),
                           AnimatedTextField(
                             controller: _weaknessesController,
                             label: 'Kelemahanmu',
                             hint: '(hambatan / keterbatasan pribadi)',
-                            onSaved: (val) => onboardingProvider.weaknesses = val!,
+                            onSaved: (val) =>
+                                onboardingProvider.weaknesses = val!,
                           ),
                           const SizedBox(height: 24),
                           AnimatedTextField(
@@ -228,22 +235,32 @@ class _SwotScreenState extends State<SwotScreen> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _isButtonEnabled && !_isLoading ? _generate : null,
+                                onPressed: _isButtonEnabled && !_isLoading
+                                    ? _generate
+                                    : null,
                                 style: ElevatedButton.styleFrom(
                                   foregroundColor: Colors.white,
                                   backgroundColor: purpleColor,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 22),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
                                 ),
                                 child: _isLoading
                                     ? const SizedBox(
-                                        height: 20, width: 20,
-                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0),
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2.0),
                                       )
                                     : const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text('Continue', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                          Text('Continue',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold)),
                                           SizedBox(width: 8),
                                           Icon(Icons.arrow_forward, size: 16),
                                         ],

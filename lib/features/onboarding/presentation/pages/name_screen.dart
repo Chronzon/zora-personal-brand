@@ -21,6 +21,12 @@ class _NameScreenState extends State<NameScreen> {
   final _formKey = GlobalKey<FormState>();
 
   @override
+  void initState() {
+    super.initState();
+    _controller.text = context.read<OnboardingProvider>().userProfile.fullName;
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
