@@ -45,3 +45,8 @@ app.*.map.json
 
 # Ignore environment files
 .env
+.env.*
+laravel-backend/.env
+laravel-backend/.env.*
+!.env.example
+!laravel-backend/.env.example

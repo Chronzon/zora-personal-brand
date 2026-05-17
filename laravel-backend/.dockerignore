@@ -2,8 +2,8 @@
 .idea/
 .vscode/
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
 .phpunit.cache/
 node_modules/
 public/build/
@@ -15,4 +15,3 @@ vendor/
 tests/
 *.log
 .DS_Store
-

@@ -4,6 +4,8 @@
 .idea/
 .vscode/
 .env
+.env.*
+!.env.example
 build/
 outputs/
 scratch/
@@ -15,6 +17,8 @@ linux/
 macos/
 windows/
 laravel-backend/.env
+laravel-backend/.env.*
+!laravel-backend/.env.example
 laravel-backend/.phpunit.cache/
 laravel-backend/node_modules/
 laravel-backend/public/build/
@@ -24,4 +28,3 @@ laravel-backend/storage/logs/*.log
 laravel-backend/vendor/
 *.log
 .DS_Store
-
