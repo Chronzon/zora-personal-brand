@@ -6,6 +6,7 @@ import 'package:personal_branding_app/features/auth/domain/repositories/i_auth_r
 import 'package:personal_branding_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/welcome_screen.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class FakeAuthRepository implements AuthRepository {
@@ -71,6 +72,9 @@ void main() {
       ChangeNotifierProvider(
         create: (_) => AuthProvider(FakeAuthRepository()),
         child: const MaterialApp(
+          locale: Locale('id'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
           home: WelcomeScreen(),
         ),
       ),

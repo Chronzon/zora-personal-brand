@@ -64,7 +64,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, child) {
           return MaterialApp(
-            title: 'Personal Branding Builder',
+            title: 'Zora',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
 

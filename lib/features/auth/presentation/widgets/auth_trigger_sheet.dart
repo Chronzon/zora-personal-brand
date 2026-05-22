@@ -18,7 +18,8 @@ class AuthTriggerSheet extends StatelessWidget {
   });
 
   // Factory method untuk mempermudah pemanggilan (OOP Encapsulation)
-  static void show(BuildContext context, {
+  static void show(
+    BuildContext context, {
     required AuthTriggerType type,
     VoidCallback? onContinueAsGuest,
   }) {
@@ -51,7 +52,9 @@ class AuthTriggerSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isFear ? Colors.orange.shade50 : purpleColor.withOpacity(0.1),
+              color: isFear
+                  ? Colors.orange.shade50
+                  : purpleColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -61,7 +64,7 @@ class AuthTriggerSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Headline (Value Proposition)
           Text(
             isFear ? "Amankan Strategi Brand Anda" : "Buka Akses Unlimited",
@@ -73,7 +76,7 @@ class AuthTriggerSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Description (Context)
           Text(
             isFear
@@ -116,7 +119,7 @@ class AuthTriggerSheet extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 12),
 
           // Secondary Button (Continue as Guest)
@@ -135,7 +138,7 @@ class AuthTriggerSheet extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
               ),
             ),
-            
+
           const SizedBox(height: 16),
         ],
       ),

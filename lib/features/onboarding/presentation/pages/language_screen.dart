@@ -38,25 +38,29 @@ class LanguageScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 48),
-              
+
               // Tombol Indonesia
               _LanguageCard(
                 flag: "🇮🇩",
                 name: "Bahasa Indonesia",
-                isSelected: context.watch<LocaleProvider>().locale?.languageCode == 'id',
+                isSelected:
+                    context.watch<LocaleProvider>().locale?.languageCode ==
+                        'id',
                 onTap: () {
                   context.read<LocaleProvider>().setLocale(const Locale('id'));
                   _navigateToWelcome(context);
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Tombol English
               _LanguageCard(
                 flag: "🇺🇸",
                 name: "English",
-                isSelected: context.watch<LocaleProvider>().locale?.languageCode == 'en',
+                isSelected:
+                    context.watch<LocaleProvider>().locale?.languageCode ==
+                        'en',
                 onTap: () {
                   context.read<LocaleProvider>().setLocale(const Locale('en'));
                   _navigateToWelcome(context);
@@ -72,6 +76,8 @@ class LanguageScreen extends StatelessWidget {
   void _navigateToWelcome(BuildContext context) {
     // Beri sedikit delay agar user melihat efek klik
     Future.delayed(const Duration(milliseconds: 300), () {
+      if (!context.mounted) return;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const WelcomeScreen()),
@@ -101,7 +107,9 @@ class _LanguageCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF8A53FF).withOpacity(0.1) : Colors.grey.shade50,
+          color: isSelected
+              ? const Color(0xFF8A53FF).withValues(alpha: 0.1)
+              : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? const Color(0xFF8A53FF) : Colors.grey.shade200,

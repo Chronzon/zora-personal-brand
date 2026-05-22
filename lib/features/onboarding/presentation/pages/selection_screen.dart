@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:personal_branding_app/core/widgets/custom_app_bar.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 
 class SelectionScreen extends StatefulWidget {
   final String title;
@@ -29,12 +30,11 @@ class _SelectionScreenState extends State<SelectionScreen> {
   @override
   Widget build(BuildContext context) {
     const purpleColor = Color(0xFF8A53FF);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(
-        title: 'BrandBuilder AI',
-      ),
+      appBar: CustomAppBar(title: l10n.appName),
       body: LayoutBuilder(builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 800;
         final padding = isMobile ? 24.0 : 48.0;
@@ -108,18 +108,18 @@ class _SelectionScreenState extends State<SelectionScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Continue',
-                                  style: TextStyle(
+                                  l10n.continueButton,
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(width: 8),
-                                Icon(Icons.arrow_forward, size: 16),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_forward, size: 16),
                               ],
                             ),
                           )
@@ -149,7 +149,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
                                     horizontal: 20, vertical: 16),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? purpleColor.withOpacity(0.05)
+                                      ? purpleColor.withValues(alpha: 0.05)
                                       : Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
@@ -193,18 +193,18 @@ class _SelectionScreenState extends State<SelectionScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Continue',
-                                style: TextStyle(
+                                l10n.continueButton,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward, size: 16),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward, size: 16),
                             ],
                           ),
                         ),

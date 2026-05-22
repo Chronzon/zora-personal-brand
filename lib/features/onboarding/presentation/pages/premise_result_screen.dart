@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_branding_app/core/widgets/custom_app_bar.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/tone_of_voice_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class PremiseResultScreen extends StatefulWidget {
@@ -29,12 +30,11 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
   Widget build(BuildContext context) {
     final onboardingProvider = context.watch<OnboardingProvider>();
     const purpleColor = Color(0xFF8A53FF);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(
-        title: 'BrandBuilder AI',
-      ),
+      appBar: CustomAppBar(title: l10n.appName),
       body: LayoutBuilder(builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 800;
         final padding = isMobile ? 24.0 : 48.0;
@@ -53,17 +53,18 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Here are some options for your premise',
-                            style: TextStyle(
+                          Text(
+                            l10n.premiseResultTitle,
+                            style: const TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Choose one that best tells your story.',
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                          Text(
+                            l10n.premiseResultSubtitle,
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 16),
                           ),
                         ],
                       )
@@ -72,21 +73,21 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Here are some options for your premise',
-                                  style: TextStyle(
+                                  l10n.premiseResultTitle,
+                                  style: const TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
-                                  'Choose one that best tells your story.',
-                                  style: TextStyle(
+                                  l10n.premiseResultSubtitle,
+                                  style: const TextStyle(
                                       color: Colors.grey, fontSize: 16),
                                 ),
                               ],
@@ -107,12 +108,12 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('Continue'),
-                                SizedBox(width: 8),
-                                Icon(Icons.arrow_forward, size: 16),
+                                Text(l10n.continueButton),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_forward, size: 16),
                               ],
                             ),
                           )
@@ -127,7 +128,8 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 16),
                       itemBuilder: (context, index) {
-                        final premise = onboardingProvider.premiseOptions[index];
+                        final premise =
+                            onboardingProvider.premiseOptions[index];
                         final isSelected = _selectedPremise == premise;
 
                         return InkWell(
@@ -142,7 +144,7 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? purpleColor.withOpacity(0.05)
+                                  ? purpleColor.withValues(alpha: 0.05)
                                   : Colors.grey.shade100,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
@@ -177,12 +179,12 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text('Continue'),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward, size: 16),
+                              Text(l10n.continueButton),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward, size: 16),
                             ],
                           ),
                         ),

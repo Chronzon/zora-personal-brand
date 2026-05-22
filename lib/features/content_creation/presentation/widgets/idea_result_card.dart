@@ -77,7 +77,7 @@ class _IdeaResultCardState extends State<IdeaResultCard> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: purpleColor.withOpacity(0.1),
+                    color: purpleColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.lightbulb_outline_rounded,

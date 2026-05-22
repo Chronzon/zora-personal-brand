@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_branding_app/core/widgets/custom_app_bar.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/premise_result_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:personal_branding_app/core/providers/locale_provider.dart';
 
@@ -69,21 +70,19 @@ class _SwotScreenState extends State<SwotScreen> {
 
       try {
         final languageCode = context.read<LocaleProvider>().languageCode;
+        final provider = context.read<OnboardingProvider>();
 
-        await Provider.of<OnboardingProvider>(context, listen: false)
-            .generatePremise(languageCode);
+        await provider.generatePremise(languageCode);
 
-        final provider =
-            Provider.of<OnboardingProvider>(context, listen: false);
-        if (mounted) {
-          if (provider.premiseAiResponse != null) {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => const PremiseResultScreen(),
-            ));
-          } else if (provider.errorMessage != null) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
-          }
+        if (!mounted) return;
+
+        if (provider.premiseAiResponse != null) {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => const PremiseResultScreen(),
+          ));
+        } else if (provider.errorMessage != null) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
         }
       } finally {
         if (mounted) {
@@ -97,12 +96,11 @@ class _SwotScreenState extends State<SwotScreen> {
   Widget build(BuildContext context) {
     final onboardingProvider = context.read<OnboardingProvider>();
     const purpleColor = Color(0xFF8A53FF);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(
-        title: 'BrandBuilder AI',
-      ),
+      appBar: CustomAppBar(title: l10n.appName),
       body: LayoutBuilder(builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 800;
         final padding = isMobile ? 24.0 : 48.0;
@@ -117,20 +115,21 @@ class _SwotScreenState extends State<SwotScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (isMobile)
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'PERSONAL DETECTOR INTELLIGENCE',
-                            style: TextStyle(
+                            l10n.detectorTitle,
+                            style: const TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
-                            'Analyze your strengths and challenges to build a solid foundation.',
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                            l10n.detectorSubtitle,
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 16),
                           ),
                         ],
                       )
@@ -139,21 +138,21 @@ class _SwotScreenState extends State<SwotScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'PERSONAL DETECTOR INTELLIGENCE',
-                                style: TextStyle(
+                                l10n.detectorTitle,
+                                style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               Text(
-                                'Analyze your strengths and challenges to build a solid foundation.',
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 16),
+                                l10n.detectorSubtitle,
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 16),
                               ),
                             ],
                           ),
@@ -185,18 +184,19 @@ class _SwotScreenState extends State<SwotScreen> {
                                         strokeWidth: 2.0,
                                       ),
                                     )
-                                  : const Row(
+                                  : Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          'Continue',
-                                          style: TextStyle(
+                                          l10n.continueButton,
+                                          style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        SizedBox(width: 8),
-                                        Icon(Icons.arrow_forward, size: 16),
+                                        const SizedBox(width: 8),
+                                        const Icon(Icons.arrow_forward,
+                                            size: 16),
                                       ],
                                     ),
                             ),
@@ -210,24 +210,30 @@ class _SwotScreenState extends State<SwotScreen> {
                         children: [
                           AnimatedTextField(
                             controller: _strengthsController,
-                            label: 'Kekuatanmu',
-                            hint: '(hal yang dikuasai & bisa dimanfaatkan)',
+                            label: l10n.strengthsLabel,
+                            info: l10n.strengthsInfo,
+                            hint: l10n.strengthsPlaceholder,
+                            validationMessage: l10n.strengthsValidation,
                             onSaved: (val) =>
                                 onboardingProvider.strengths = val!,
                           ),
                           const SizedBox(height: 24),
                           AnimatedTextField(
                             controller: _weaknessesController,
-                            label: 'Kelemahanmu',
-                            hint: '(hambatan / keterbatasan pribadi)',
+                            label: l10n.weaknessesLabel,
+                            info: l10n.weaknessesInfo,
+                            hint: l10n.weaknessesPlaceholder,
+                            validationMessage: l10n.weaknessesValidation,
                             onSaved: (val) =>
                                 onboardingProvider.weaknesses = val!,
                           ),
                           const SizedBox(height: 24),
                           AnimatedTextField(
                             controller: _threatsController,
-                            label: 'Tantanganmu',
-                            hint: '(hal yang menghambat keberhasilan)',
+                            label: l10n.threatsLabel,
+                            info: l10n.threatsInfo,
+                            hint: l10n.threatsPlaceholder,
+                            validationMessage: l10n.threatsValidation,
                             onSaved: (val) => onboardingProvider.threats = val!,
                           ),
                           if (isMobile) ...[
@@ -254,15 +260,16 @@ class _SwotScreenState extends State<SwotScreen> {
                                             color: Colors.white,
                                             strokeWidth: 2.0),
                                       )
-                                    : const Row(
+                                    : Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text('Continue',
-                                              style: TextStyle(
+                                          Text(l10n.continueButton,
+                                              style: const TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold)),
-                                          SizedBox(width: 8),
-                                          Icon(Icons.arrow_forward, size: 16),
+                                          const SizedBox(width: 8),
+                                          const Icon(Icons.arrow_forward,
+                                              size: 16),
                                         ],
                                       ),
                               ),
@@ -287,6 +294,8 @@ class AnimatedTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String label;
   final String? hint;
+  final String info;
+  final String validationMessage;
   final Function(String?) onSaved;
 
   const AnimatedTextField({
@@ -294,6 +303,8 @@ class AnimatedTextField extends StatefulWidget {
     this.controller,
     required this.label,
     this.hint,
+    required this.info,
+    required this.validationMessage,
     required this.onSaved,
   });
 
@@ -308,18 +319,30 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
 
     return TextFormField(
       controller: widget.controller,
+      minLines: 3,
+      maxLines: 5,
       style: const TextStyle(
         color: Colors.black,
         fontWeight: FontWeight.w500,
       ),
       decoration: InputDecoration(
         labelText: widget.label,
+        helperText: widget.info,
+        helperMaxLines: 2,
         hintText: widget.hint,
+        hintStyle: TextStyle(color: Colors.grey.shade400),
+        suffixIcon: Tooltip(
+          message: widget.info,
+          child: const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: Icon(Icons.info_outline_rounded, color: Colors.grey),
+          ),
+        ),
         floatingLabelBehavior: FloatingLabelBehavior.auto,
         filled: true,
         fillColor: Colors.grey.shade100,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -348,8 +371,8 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
       ),
       onSaved: widget.onSaved,
       validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Wajib diisi';
+        if (value == null || value.trim().isEmpty) {
+          return widget.validationMessage;
         }
         return null;
       },

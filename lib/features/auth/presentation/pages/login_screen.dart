@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   size: 100, color: Colors.white),
                               const SizedBox(height: 24),
                               Text(
-                                "BrandBuilder AI",
+                                "Zora",
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,

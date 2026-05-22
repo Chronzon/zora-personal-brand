@@ -3,6 +3,7 @@ import 'package:personal_branding_app/core/widgets/custom_app_bar.dart';
 import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/auth/presentation/widgets/auth_trigger_sheet.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import '../../../dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -13,10 +14,11 @@ class PillarResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final onboardingProvider = context.watch<OnboardingProvider>();
     const purpleColor = Color(0xFF8A53FF);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(title: 'Hasil Content Pillar'),
+      appBar: CustomAppBar(title: l10n.appName),
       body: LayoutBuilder(builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 800;
         final padding = isMobile ? 24.0 : 48.0;
@@ -33,7 +35,7 @@ class PillarResultScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Strategi Konten Anda',
+                          l10n.pillarResultTitle,
                           style: TextStyle(
                             fontSize: isMobile ? 24 : 28,
                             fontWeight: FontWeight.bold,
@@ -49,7 +51,7 @@ class PillarResultScreen extends StatelessWidget {
                           ),
                           child: Text(
                             onboardingProvider.pillarAiResponse ??
-                                'Tidak ada hasil.',
+                                l10n.pillarResultEmpty,
                             style: const TextStyle(fontSize: 16, height: 1.5),
                           ),
                         ),
@@ -105,9 +107,9 @@ class PillarResultScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Go to Home',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.goToHome,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
