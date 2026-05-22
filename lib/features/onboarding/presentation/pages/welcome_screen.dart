@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:personal_branding_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/name_screen.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -16,43 +17,52 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // Data Slide Intro
-  final List<Map<String, String>> _onboardingData = [
-    {
-      "title": "Personal Branding\nBerbasis AI",
-      "desc":
-          "Biarkan AI menganalisis Ikigai Anda dan merancang strategi branding yang 100% unik dan otentik.",
-      "icon": "✨" // Bisa diganti Image Asset nanti
-    },
-    {
-      "title": "Ide Konten Tanpa Batas",
-      "desc":
-          "Jangan pernah kehabisan ide. Dapatkan ratusan ide konten viral yang disesuaikan dengan Niche Anda.",
-      "icon": "💡"
-    },
-    {
-      "title": "Script Siap Posting",
-      "desc":
-          "Dari ide menjadi naskah video TikTok atau Caption Instagram hanya dalam hitungan detik.",
-      "icon": "🚀"
-    },
-  ];
+  List<Map<String, String>> _onboardingData(AppLocalizations l10n) {
+    return [
+      {
+        "title": l10n.welcomeSlideOneTitle,
+        "desc": l10n.welcomeSlideOneDescription,
+        "icon": "✨"
+      },
+      {
+        "title": l10n.welcomeSlideTwoTitle,
+        "desc": l10n.welcomeSlideTwoDescription,
+        "icon": "💡"
+      },
+      {
+        "title": l10n.welcomeSlideThreeTitle,
+        "desc": l10n.welcomeSlideThreeDescription,
+        "icon": "🚀"
+      },
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     const purpleColor = Color(0xFF8A53FF);
+    final l10n = AppLocalizations.of(context)!;
+    final onboardingData = _onboardingData(l10n);
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // 1. HEADER: Tombol Login (Untuk User Lama)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  const Icon(Icons.auto_awesome, color: purpleColor, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.appName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const Spacer(),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -61,7 +71,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       );
                     },
                     child: Text(
-                      "Log In",
+                      l10n.logIn,
                       style: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.bold,
                         color: purpleColor,
@@ -80,7 +90,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 onPageChanged: (value) {
                   setState(() => _currentPage = value);
                 },
-                itemCount: _onboardingData.length,
+                itemCount: onboardingData.length,
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -92,19 +102,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           height: 200,
                           width: 200,
                           decoration: BoxDecoration(
-                            color: purpleColor.withOpacity(0.05),
+                            color: purpleColor.withValues(alpha: 0.05),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
                             child: Text(
-                              _onboardingData[index]["icon"]!,
+                              onboardingData[index]["icon"]!,
                               style: const TextStyle(fontSize: 80),
                             ),
                           ),
                         ),
                         const SizedBox(height: 48),
                         Text(
-                          _onboardingData[index]["title"]!,
+                          onboardingData[index]["title"]!,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 32,
@@ -115,7 +125,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _onboardingData[index]["desc"]!,
+                          onboardingData[index]["desc"]!,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
@@ -139,7 +149,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
-                      _onboardingData.length,
+                      onboardingData.length,
                       (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         margin: const EdgeInsets.only(right: 6),
@@ -178,13 +188,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         backgroundColor: purpleColor,
                         foregroundColor: Colors.white,
                         elevation: 10, // Shadow biar megah
-                        shadowColor: purpleColor.withOpacity(0.4),
+                        shadowColor: purpleColor.withValues(alpha: 0.4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       child: Text(
-                        "Mulai Branding Sekarang",
+                        l10n.welcomeStartButton,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

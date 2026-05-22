@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/identity_finder_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class NameScreen extends StatefulWidget {
@@ -46,6 +47,7 @@ class _NameScreenState extends State<NameScreen> {
   Widget build(BuildContext context) {
     const purpleColor =
         Color(0xFF8A53FF); // Sesuaikan dengan warna branding Anda
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -73,7 +75,8 @@ class _NameScreenState extends State<NameScreen> {
                         icon:
                             const Icon(Icons.arrow_back, color: Colors.black87),
                         onPressed: () => Navigator.pop(context),
-                        tooltip: 'Back',
+                        tooltip:
+                            MaterialLocalizations.of(context).backButtonTooltip,
                       )
                     else
                       const SizedBox(width: 48),
@@ -85,7 +88,7 @@ class _NameScreenState extends State<NameScreen> {
                             color: purpleColor, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          'BrandBuilder AI',
+                          l10n.appName,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -119,21 +122,21 @@ class _NameScreenState extends State<NameScreen> {
                         children: [
                           // Headline Besar
                           Text(
-                            'Siapa Nama Brand Anda?',
+                            l10n.brandNameTitle,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: isMobile ? 32 : 42,
                               fontWeight: FontWeight.w800,
                               color: Colors.black,
                               height: 1.2,
-                              letterSpacing: -0.5,
+                              letterSpacing: 0,
                             ),
                           ),
                           const SizedBox(height: 16),
 
                           // Subtitle Penjelas
                           Text(
-                            'Kami akan menggunakan nama ini untuk menyusun strategi personal branding yang unik untuk Anda.',
+                            l10n.brandNameSubtitle,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: isMobile ? 16 : 18,
@@ -158,11 +161,20 @@ class _NameScreenState extends State<NameScreen> {
                                   textAlign: TextAlign
                                       .center, // Teks di tengah agar fokus
                                   decoration: InputDecoration(
-                                    hintText:
-                                        'Contoh: Kopi Kenangan / John Doe',
+                                    labelText: l10n.brandNameInputLabel,
+                                    helperText: l10n.brandNameInputInfo,
+                                    helperMaxLines: 2,
+                                    hintText: l10n.brandNameInputPlaceholder,
                                     hintStyle: TextStyle(
                                       color: Colors.grey.shade400,
                                       fontSize: 16,
+                                    ),
+                                    suffixIcon: Tooltip(
+                                      message: l10n.brandNameInputInfo,
+                                      child: const Icon(
+                                        Icons.info_outline_rounded,
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                     filled: true,
                                     fillColor: Colors.grey.shade50,
@@ -194,7 +206,7 @@ class _NameScreenState extends State<NameScreen> {
                                     ),
                                   ),
                                   validator: (value) => value!.trim().isEmpty
-                                      ? 'Nama brand tidak boleh kosong'
+                                      ? l10n.brandNameValidation
                                       : null,
                                   onFieldSubmitted: (_) =>
                                       _next(), // Enter = Next
@@ -212,7 +224,8 @@ class _NameScreenState extends State<NameScreen> {
                                       backgroundColor: purpleColor,
                                       foregroundColor: Colors.white,
                                       elevation: 10,
-                                      shadowColor: purpleColor.withOpacity(0.4),
+                                      shadowColor:
+                                          purpleColor.withValues(alpha: 0.4),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
@@ -222,7 +235,7 @@ class _NameScreenState extends State<NameScreen> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          'Lanjutkan',
+                                          l10n.continueButton,
                                           style: GoogleFonts.plusJakartaSans(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -250,7 +263,7 @@ class _NameScreenState extends State<NameScreen> {
                                   size: 16, color: Colors.grey.shade500),
                               const SizedBox(width: 8),
                               Text(
-                                'Data Anda aman dan hanya untuk analisis AI.',
+                                l10n.brandNamePrivacyNote,
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   color: Colors.grey.shade500,

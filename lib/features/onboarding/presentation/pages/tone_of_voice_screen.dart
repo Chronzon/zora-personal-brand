@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_branding_app/core/widgets/custom_app_bar.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/pillar_result_screen.dart'; // Sesuaikan navigasi selanjutnya
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:personal_branding_app/core/providers/locale_provider.dart';
 
@@ -69,24 +70,25 @@ class ToneOfVoiceScreen extends StatefulWidget {
 class _ToneOfVoiceScreenState extends State<ToneOfVoiceScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedTone;
-  final _toneOptions = [
-    'Edukatif & Informatif',
-    'Casual & Friendly',
-    'Inspirational & Motivational',
-    'Fun & Energetic',
-    'Luxury & Exclusive',
-    'Bold & Controversial',
-    'Visionary & Encouraging',
-  ];
   final _targetAudienceController = TextEditingController();
+
+  List<String> _toneOptions(AppLocalizations l10n) {
+    return [
+      l10n.toneEducational,
+      l10n.toneCasual,
+      l10n.toneInspirational,
+      l10n.toneFun,
+      l10n.toneLuxury,
+      l10n.toneBold,
+      l10n.toneVisionary,
+    ];
+  }
 
   @override
   void initState() {
     super.initState();
     final brandProfile = context.read<OnboardingProvider>().brandProfile;
-    if (_toneOptions.contains(brandProfile.toneOfVoice)) {
-      _selectedTone = brandProfile.toneOfVoice;
-    }
+    _selectedTone = brandProfile.toneOfVoice;
     _targetAudienceController.text = brandProfile.targetAudience;
   }
 
@@ -98,6 +100,7 @@ class _ToneOfVoiceScreenState extends State<ToneOfVoiceScreen> {
 
   // FIXED: Logic _next diperbaiki dan dipisah dari build
   void _next() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate() && _selectedTone != null) {
       _formKey.currentState!.save();
       final provider = context.read<OnboardingProvider>();
@@ -119,12 +122,12 @@ class _ToneOfVoiceScreenState extends State<ToneOfVoiceScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content:
-                  Text(provider.errorMessage ?? "Gagal generate strategi")),
+                  Text(provider.errorMessage ?? l10n.strategyGenerationFailed)),
         );
       }
     } else if (_selectedTone == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Pilih Tone of Voice terlebih dahulu")),
+        SnackBar(content: Text(l10n.toneRequiredMessage)),
       );
     }
   }
@@ -132,12 +135,14 @@ class _ToneOfVoiceScreenState extends State<ToneOfVoiceScreen> {
   @override
   Widget build(BuildContext context) {
     const purpleColor = Color(0xFF8A53FF);
+    final l10n = AppLocalizations.of(context)!;
+    final toneOptions = _toneOptions(l10n);
     final provider =
         context.watch<OnboardingProvider>(); // Listen to provider changes
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(title: 'BrandBuilder AI'),
+      appBar: CustomAppBar(title: l10n.appName),
       body: LayoutBuilder(builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 800;
         final padding = isMobile ? 24.0 : 48.0;
@@ -154,21 +159,21 @@ class _ToneOfVoiceScreenState extends State<ToneOfVoiceScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ... Header Text ...
-                      const Text(
-                        'Langkah Terakhir, Tentukan Gaya Anda',
-                        style: TextStyle(
+                      Text(
+                        l10n.toneTitle,
+                        style: const TextStyle(
                             fontSize: 28, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 48),
 
                       // Tone of Voice Section
-                      const Text('TONE OF VOICE',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(l10n.toneSectionLabel.toUpperCase(),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
                       Wrap(
                         spacing: 16.0,
                         runSpacing: 16.0,
-                        children: _toneOptions.map((tone) {
+                        children: toneOptions.map((tone) {
                           return HoverAnimatedChip(
                             label: tone,
                             isSelected: _selectedTone == tone,
@@ -180,19 +185,32 @@ class _ToneOfVoiceScreenState extends State<ToneOfVoiceScreen> {
                       const SizedBox(height: 48),
 
                       // Target Audience Section
-                      const Text('TARGET AUDIENCE',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(l10n.targetAudienceLabel.toUpperCase(),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _targetAudienceController,
                         decoration: InputDecoration(
-                          hintText: 'Contoh: Mahasiswa, Profesional',
+                          labelText: l10n.targetAudienceLabel,
+                          helperText: l10n.targetAudienceInfo,
+                          helperMaxLines: 2,
+                          hintText: l10n.targetAudiencePlaceholder,
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          suffixIcon: Tooltip(
+                            message: l10n.targetAudienceInfo,
+                            child: const Icon(
+                              Icons.info_outline_rounded,
+                              color: Colors.grey,
+                            ),
+                          ),
                           filled: true,
                           fillColor: const Color(0xFFF5F5F5),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
-                        validator: (val) => val!.isEmpty ? 'Wajib diisi' : null,
+                        validator: (val) => val!.trim().isEmpty
+                            ? l10n.targetAudienceValidation
+                            : null,
                       ),
 
                       const SizedBox(height: 32),
@@ -212,9 +230,9 @@ class _ToneOfVoiceScreenState extends State<ToneOfVoiceScreen> {
                           child: provider.isLoading
                               ? const CircularProgressIndicator(
                                   color: Colors.white)
-                              : const Text('Generate Strategy',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
+                              : Text(l10n.generateStrategyButton,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],

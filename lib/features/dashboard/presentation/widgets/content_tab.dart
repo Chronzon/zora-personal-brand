@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../content_creation/presentation/providers/content_creation_provider.dart';
 import '../../../content_creation/presentation/widgets/create_idea_sheet.dart';
@@ -24,6 +25,7 @@ class _ContentTabState extends State<ContentTab> {
   @override
   Widget build(BuildContext context) {
     final contentProvider = context.watch<ContentCreationProvider>();
+    final l10n = AppLocalizations.of(context)!;
     const purpleColor = Color(0xFF8A53FF);
 
     // Gunakan LayoutBuilder untuk responsif
@@ -50,8 +52,8 @@ class _ContentTabState extends State<ContentTab> {
             backgroundColor: Colors.black,
             elevation: 4,
             icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text("Generate New",
-                style: TextStyle(
+            label: Text(l10n.contentGenerateNew,
+                style: const TextStyle(
                     color: Colors.white, fontWeight: FontWeight.bold)),
           ),
           body: CustomScrollView(
@@ -64,9 +66,9 @@ class _ContentTabState extends State<ContentTab> {
                 elevation: 0,
                 flexibleSpace: FlexibleSpaceBar(
                   titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
-                  title: const Text(
-                    'Script History',
-                    style: TextStyle(
+                  title: Text(
+                    l10n.contentScriptHistory,
+                    style: const TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
@@ -106,7 +108,7 @@ class _ContentTabState extends State<ContentTab> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          "No Scripts Generated Yet",
+                          l10n.contentEmptyTitle,
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -114,7 +116,7 @@ class _ContentTabState extends State<ContentTab> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "Generate ideas first, then create scripts!",
+                          l10n.contentEmptyBody,
                           style: TextStyle(
                               fontSize: 14, color: Colors.grey.shade600),
                         ),

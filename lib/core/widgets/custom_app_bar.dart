@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
-  final bool showMenuButton;
 
   const CustomAppBar({
     super.key,
     required this.title,
     this.showBackButton = true,
-    this.showMenuButton = true,
   });
 
   @override
@@ -38,17 +36,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       centerTitle: true,
-      actions: [
-        if (showMenuButton)
-          IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: () {
-              // Fungsi hamburger menu nanti
-            },
-          )
-        else
-          const SizedBox(width: 48), // Beri ruang kosong agar judul tetap di tengah
-      ],
+      actions: const [SizedBox(width: 48)],
     );
   }
 

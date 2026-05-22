@@ -94,7 +94,7 @@ class _GeneratedIdeasScreenState extends State<GeneratedIdeasScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -127,7 +127,7 @@ class _GeneratedIdeasScreenState extends State<GeneratedIdeasScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child:
@@ -204,10 +204,12 @@ class _GeneratedIdeasScreenState extends State<GeneratedIdeasScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getPlatformColor(idea.platform).withOpacity(0.1),
+                    color:
+                        _getPlatformColor(idea.platform).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _getPlatformColor(idea.platform).withOpacity(0.3),
+                      color: _getPlatformColor(idea.platform)
+                          .withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(

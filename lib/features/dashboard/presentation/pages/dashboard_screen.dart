@@ -3,6 +3,7 @@ import 'settings_screen.dart';
 import '../widgets/home_tab.dart';
 import '../widgets/strategy_tab.dart';
 import '../widgets/content_tab.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,27 +21,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const ContentTab(),
   ];
 
-  final List<NavigationDestination> _destinations = const [
-    NavigationDestination(
-      icon: Icon(Icons.dashboard_outlined),
-      selectedIcon: Icon(Icons.dashboard),
-      label: 'Home',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.map_outlined),
-      selectedIcon: Icon(Icons.map),
-      label: 'Strategy',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.auto_awesome_outlined),
-      selectedIcon: Icon(Icons.auto_awesome),
-      label: 'Content',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     const purpleColor = Color(0xFF8A53FF);
+    final l10n = AppLocalizations.of(context)!;
+    final destinations = [
+      NavigationDestination(
+        icon: const Icon(Icons.dashboard_outlined),
+        selectedIcon: const Icon(Icons.dashboard),
+        label: l10n.dashboardHome,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.map_outlined),
+        selectedIcon: const Icon(Icons.map),
+        label: l10n.dashboardStrategy,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.auto_awesome_outlined),
+        selectedIcon: const Icon(Icons.auto_awesome),
+        label: l10n.dashboardContent,
+      ),
+    ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -62,7 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   selectedIconTheme: const IconThemeData(color: purpleColor),
                   selectedLabelTextStyle: const TextStyle(
                       color: purpleColor, fontWeight: FontWeight.bold),
-                  destinations: _destinations
+                  destinations: destinations
                       .map((d) => NavigationRailDestination(
                             icon: d.icon,
                             selectedIcon: d.selectedIcon,
@@ -118,7 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
                 backgroundColor: Colors.white,
                 indicatorColor: purpleColor.withValues(alpha: 0.2),
-                destinations: _destinations,
+                destinations: destinations,
               ),
             ),
           );

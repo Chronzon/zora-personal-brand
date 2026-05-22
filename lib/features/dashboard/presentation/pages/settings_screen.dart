@@ -606,7 +606,7 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Switch(
               value: false,
               onChanged: null,
-              activeColor: _purpleColor,
+              activeThumbColor: _purpleColor,
             ),
             onTap: () {},
           ),

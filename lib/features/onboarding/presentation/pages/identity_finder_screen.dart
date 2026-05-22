@@ -1,9 +1,11 @@
 // lib/onboarding/identity_finder_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:personal_branding_app/core/widgets/custom_app_bar.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/selection_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/pages/swot_screen.dart';
 import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:personal_branding_app/core/providers/locale_provider.dart';
 
@@ -67,6 +69,7 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
 
   void _generate() async {
     if (_formKey.currentState!.validate()) {
+      final l10n = AppLocalizations.of(context)!;
       _formKey.currentState!.save();
 
       setState(() {
@@ -76,63 +79,58 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
       try {
         // Ambil bahasa
         final languageCode = context.read<LocaleProvider>().languageCode;
+        final provider = context.read<OnboardingProvider>();
 
         // Pass ke fungsi
-        await Provider.of<OnboardingProvider>(context, listen: false)
-            .generateIdentity(languageCode);
+        await provider.generateIdentity(languageCode);
 
-        final provider =
-            Provider.of<OnboardingProvider>(context, listen: false);
-        if (mounted) {
-          if (provider.aiResponse != null &&
-              provider.profileNameOptions.isNotEmpty) {
-            // --- PERUBAHAN DI SINI: LANGSUNG NAVIGASI KE SELECTION SCREEN ---
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => SelectionScreen(
-                title: 'Pick your profile name',
-                subtitle:
-                    'Choose a name that best represents your brand. This will be your identity.',
-                options: provider.profileNameOptions,
-                onSelect: (value) {
-                  provider.selectedProfileName = value;
-                },
-                onNext: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => SelectionScreen(
-                      title: 'Select a Category',
-                      subtitle:
-                          'This will define the general area of your content.',
-                      options: provider.categoryOptions,
-                      onSelect: (value) {
-                        provider.selectedCategory = value;
-                      },
-                      onNext: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => SelectionScreen(
-                            title: 'Choose a Micro-Niche',
-                            subtitle:
-                                'Get specific! This is where you\'ll stand out.',
-                            options: provider.microNicheOptions,
-                            onSelect: (value) {
-                              provider.selectedMicroNiche = value;
-                            },
-                            onNext: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (_) => const SwotScreen(),
-                              ));
-                            },
-                          ),
-                        ));
-                      },
-                    ),
-                  ));
-                },
-              ),
-            ));
-          } else if (provider.errorMessage != null) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
-          }
+        if (!mounted) return;
+
+        if (provider.aiResponse != null &&
+            provider.profileNameOptions.isNotEmpty) {
+          // --- PERUBAHAN DI SINI: LANGSUNG NAVIGASI KE SELECTION SCREEN ---
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => SelectionScreen(
+              title: l10n.profileNameSelectionTitle,
+              subtitle: l10n.profileNameSelectionSubtitle,
+              options: provider.profileNameOptions,
+              onSelect: (value) {
+                provider.selectedProfileName = value;
+              },
+              onNext: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => SelectionScreen(
+                    title: l10n.categorySelectionTitle,
+                    subtitle: l10n.categorySelectionSubtitle,
+                    options: provider.categoryOptions,
+                    onSelect: (value) {
+                      provider.selectedCategory = value;
+                    },
+                    onNext: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => SelectionScreen(
+                          title: l10n.microNicheSelectionTitle,
+                          subtitle: l10n.microNicheSelectionSubtitle,
+                          options: provider.microNicheOptions,
+                          onSelect: (value) {
+                            provider.selectedMicroNiche = value;
+                          },
+                          onNext: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const SwotScreen(),
+                            ));
+                          },
+                        ),
+                      ));
+                    },
+                  ),
+                ));
+              },
+            ),
+          ));
+        } else if (provider.errorMessage != null) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
         }
       } finally {
         if (mounted) {
@@ -148,43 +146,11 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<OnboardingProvider>(context, listen: false);
     const purpleColor = Color(0xFF8A53FF);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80.0),
-        child: AppBar(
-          toolbarHeight: 80.0,
-          backgroundColor: Colors.white,
-          elevation: 0,
-          shape: Border(
-            bottom: BorderSide(
-              color: Colors.grey.shade300,
-              width: 1.0,
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: const Text(
-            'BrandBuilder AI',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black),
-              onPressed: () {
-                // Fungsi hamburger menu nanti
-              },
-            ),
-          ],
-        ),
-      ),
+      appBar: CustomAppBar(title: l10n.appName),
       body: LayoutBuilder(builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 800;
         final padding = isMobile ? 24.0 : 48.0;
@@ -202,17 +168,18 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Business Profile Setup',
-                            style: TextStyle(
+                          Text(
+                            l10n.identityTitle,
+                            style: const TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'You can always change these later',
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                          Text(
+                            l10n.identitySubtitle,
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 16),
                           ),
                         ],
                       )
@@ -222,21 +189,21 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                         crossAxisAlignment:
                             CrossAxisAlignment.center, // Rata tengah vertikal
                         children: [
-                          const Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Business Profile Setup',
-                                style: TextStyle(
+                                l10n.identityTitle,
+                                style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               Text(
-                                'You can always change these later',
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 16),
+                                l10n.identitySubtitle,
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 16),
                               ),
                             ],
                           ),
@@ -264,18 +231,19 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                                 children: [
                                   Opacity(
                                     opacity: _isLoading ? 0.0 : 1.0,
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          'Continue',
-                                          style: TextStyle(
+                                          l10n.continueButton,
+                                          style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        SizedBox(width: 8),
-                                        Icon(Icons.arrow_forward, size: 16),
+                                        const SizedBox(width: 8),
+                                        const Icon(Icons.arrow_forward,
+                                            size: 16),
                                       ],
                                     ),
                                   ),
@@ -306,19 +274,20 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                               children: [
                                 AnimatedTextField(
                                   controller: _whatYouDoController,
-                                  label: 'What You Do',
-                                  tooltipMessage:
-                                      'What is it that you do that you want to share?',
+                                  label: l10n.whatILoveLabel,
+                                  info: l10n.whatILoveInfo,
+                                  hint: l10n.whatILovePlaceholder,
+                                  validationMessage: l10n.whatILoveValidation,
                                   onSaved: (val) => provider.whatILove = val!,
                                 ),
                                 const SizedBox(height: 24),
                                 AnimatedTextField(
                                   controller: _coreValueController,
-                                  label: 'Core Value Proposition',
-                                  tooltipMessage:
-                                      'What unique problem does your business solve?',
-                                  hint:
-                                      'example: "We help e-commerce brands reduce returns with AI fit recommendations"',
+                                  label: l10n.whatImGoodAtLabel,
+                                  info: l10n.whatImGoodAtInfo,
+                                  hint: l10n.whatImGoodAtPlaceholder,
+                                  validationMessage:
+                                      l10n.whatImGoodAtValidation,
                                   onSaved: (val) =>
                                       provider.whatImGoodAt = val!,
                                 ),
@@ -331,9 +300,10 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                                 Expanded(
                                   child: AnimatedTextField(
                                     controller: _whatYouDoController,
-                                    label: 'What You Do',
-                                    tooltipMessage:
-                                        'What is it that you do that you want to share?',
+                                    label: l10n.whatILoveLabel,
+                                    info: l10n.whatILoveInfo,
+                                    hint: l10n.whatILovePlaceholder,
+                                    validationMessage: l10n.whatILoveValidation,
                                     onSaved: (val) => provider.whatILove = val!,
                                   ),
                                 ),
@@ -341,11 +311,11 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                                 Expanded(
                                   child: AnimatedTextField(
                                     controller: _coreValueController,
-                                    label: 'Core Value Proposition',
-                                    tooltipMessage:
-                                        'What unique problem does your business solve?',
-                                    hint:
-                                        'example: "We help e-commerce brands reduce returns with AI fit recommendations"',
+                                    label: l10n.whatImGoodAtLabel,
+                                    info: l10n.whatImGoodAtInfo,
+                                    hint: l10n.whatImGoodAtPlaceholder,
+                                    validationMessage:
+                                        l10n.whatImGoodAtValidation,
                                     onSaved: (val) =>
                                         provider.whatImGoodAt = val!,
                                   ),
@@ -358,18 +328,24 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                               children: [
                                 AnimatedTextField(
                                   controller: _differentiatorsController,
-                                  label: 'Key Differentiators',
-                                  tooltipMessage:
-                                      'List things you do better than competitors',
+                                  label: l10n.whatTheWorldNeedsLabel,
+                                  info: l10n.whatTheWorldNeedsInfo,
+                                  hint: l10n.whatTheWorldNeedsPlaceholder,
+                                  validationMessage:
+                                      l10n.whatTheWorldNeedsValidation,
                                   onSaved: (val) =>
                                       provider.whatTheWorldNeeds = val!,
                                 ),
                                 const SizedBox(height: 24),
                                 AnimatedTextField(
                                   controller: _revenueModelController,
-                                  label: 'Revenue Model (Optional)',
+                                  label: l10n.whatICanBePaidForLabel,
+                                  info: l10n.whatICanBePaidForInfo,
+                                  hint: l10n.whatICanBePaidForPlaceholder,
+                                  validationMessage:
+                                      l10n.whatICanBePaidForValidation,
                                   onSaved: (val) =>
-                                      provider.whatICanBePaidFor = val!,
+                                      provider.whatICanBePaidFor = val ?? '',
                                   isOptional: true,
                                 ),
                               ],
@@ -381,9 +357,11 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                                 Expanded(
                                   child: AnimatedTextField(
                                     controller: _differentiatorsController,
-                                    label: 'Key Differentiators',
-                                    tooltipMessage:
-                                        'List things you do better than competitors',
+                                    label: l10n.whatTheWorldNeedsLabel,
+                                    info: l10n.whatTheWorldNeedsInfo,
+                                    hint: l10n.whatTheWorldNeedsPlaceholder,
+                                    validationMessage:
+                                        l10n.whatTheWorldNeedsValidation,
                                     onSaved: (val) =>
                                         provider.whatTheWorldNeeds = val!,
                                   ),
@@ -392,9 +370,13 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                                 Expanded(
                                   child: AnimatedTextField(
                                     controller: _revenueModelController,
-                                    label: 'Revenue Model (Optional)',
+                                    label: l10n.whatICanBePaidForLabel,
+                                    info: l10n.whatICanBePaidForInfo,
+                                    hint: l10n.whatICanBePaidForPlaceholder,
+                                    validationMessage:
+                                        l10n.whatICanBePaidForValidation,
                                     onSaved: (val) =>
-                                        provider.whatICanBePaidFor = val!,
+                                        provider.whatICanBePaidFor = val ?? '',
                                     isOptional: true,
                                   ),
                                 ),
@@ -431,18 +413,18 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                               children: [
                                 Opacity(
                                   opacity: _isLoading ? 0.0 : 1.0,
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        'Continue',
-                                        style: TextStyle(
+                                        l10n.continueButton,
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      SizedBox(width: 8),
-                                      Icon(Icons.arrow_forward, size: 16),
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.arrow_forward, size: 16),
                                     ],
                                   ),
                                 ),
@@ -479,7 +461,8 @@ class AnimatedTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String label;
   final String? hint;
-  final String? tooltipMessage;
+  final String info;
+  final String validationMessage;
   final Function(String?) onSaved;
   final bool isOptional;
 
@@ -488,7 +471,8 @@ class AnimatedTextField extends StatefulWidget {
     this.controller,
     required this.label,
     this.hint,
-    this.tooltipMessage,
+    required this.info,
+    required this.validationMessage,
     required this.onSaved,
     this.isOptional = false,
   });
@@ -498,47 +482,35 @@ class AnimatedTextField extends StatefulWidget {
 }
 
 class _AnimatedTextFieldState extends State<AnimatedTextField> {
-  final FocusNode _focusNode = FocusNode();
-  bool _isFocused = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode.addListener(() {
-      setState(() {
-        _isFocused = _focusNode.hasFocus;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     const purpleColor = Color(0xFF8A53FF);
 
     return Tooltip(
-      message: widget.tooltipMessage ?? '',
+      message: widget.info,
       child: TextFormField(
         controller: widget.controller,
-        focusNode: _focusNode,
+        minLines: 3,
+        maxLines: 5,
         style: const TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           labelText: widget.label,
-          hintText: _isFocused ? widget.hint : null,
-          hintStyle: const TextStyle(fontSize: 10),
+          helperText: widget.info,
+          helperMaxLines: 2,
+          hintText: widget.hint,
+          hintStyle: TextStyle(color: Colors.grey.shade400),
+          suffixIcon: const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: Icon(Icons.info_outline_rounded, color: Colors.grey),
+          ),
           floatingLabelBehavior: FloatingLabelBehavior.auto,
           filled: true,
           fillColor: Colors.grey.shade100,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -567,8 +539,8 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
         ),
         onSaved: widget.onSaved,
         validator: (value) {
-          if (!widget.isOptional && (value == null || value.isEmpty)) {
-            return 'Wajib diisi';
+          if (!widget.isOptional && (value == null || value.trim().isEmpty)) {
+            return widget.validationMessage;
           }
           return null;
         },

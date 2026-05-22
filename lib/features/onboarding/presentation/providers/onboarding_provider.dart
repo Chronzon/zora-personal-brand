@@ -145,6 +145,11 @@ class OnboardingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  set opportunities(String value) {
+    _brandProfile = _brandProfile.copyWith(opportunities: value);
+    notifyListeners();
+  }
+
   set threats(String value) {
     _brandProfile = _brandProfile.copyWith(threats: value);
     notifyListeners();

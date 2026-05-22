@@ -1,137 +1,165 @@
 import 'package:flutter/material.dart';
-import '../../../onboarding/presentation/pages/name_screen.dart';
-import '../../../onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:personal_branding_app/features/onboarding/presentation/pages/name_screen.dart';
+import 'package:personal_branding_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class StrategyTab extends StatelessWidget {
   const StrategyTab({super.key});
 
+  static const Color _purpleColor = Color(0xFF8A53FF);
+  static const Color _backgroundColor = Color(0xFFF8F9FE);
+  static const Color _inkColor = Color(0xFF171717);
+
   @override
   Widget build(BuildContext context) {
     final onboardingProvider = context.watch<OnboardingProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
-        title: const Text('Brand Strategy',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text(
+          l10n.strategyTitle,
+          style: const TextStyle(
+            color: _inkColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.white,
       ),
       body: onboardingProvider.isOnboardingComplete
-          ? LayoutBuilder(
-              builder: (context, constraints) {
-                final isTablet = constraints.maxWidth > 700;
-
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // --- Bagian Atas: Audience & Monetization ---
-                      if (isTablet)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                                child: _buildSectionGroup(
-                                    'Target Audience',
-                                    onboardingProvider
-                                        .brandProfile.targetAudience,
-                                    Icons.groups_outlined)),
-                            const SizedBox(width: 24),
-                            Expanded(
-                                child: _buildSectionGroup(
-                                    'Monetization',
-                                    onboardingProvider
-                                        .brandProfile.opportunities,
-                                    Icons.attach_money)),
-                          ],
-                        )
-                      else
-                        Column(
-                          children: [
-                            _buildSectionGroup(
-                                'Target Audience',
-                                onboardingProvider.brandProfile.targetAudience,
-                                Icons.groups_outlined),
-                            const SizedBox(height: 24),
-                            _buildSectionGroup(
-                                'Monetization',
-                                onboardingProvider.brandProfile.opportunities,
-                                Icons.attach_money),
-                          ],
-                        ),
-
-                      const SizedBox(height: 32),
-                      const Divider(),
-                      const SizedBox(height: 24),
-
-                      // --- Bagian Bawah: SWOT Analysis ---
-                      const Text(
-                        'SWOT ANALYSIS',
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
-                            letterSpacing: 1.2),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Grid SWOT yang responsif
-                      _buildSwotGrid(onboardingProvider, isTablet),
-                    ],
-                  ),
-                );
-              },
-            )
-          : _buildIncompleteState(context),
+          ? _buildStrategyBody(context, onboardingProvider, l10n)
+          : _buildIncompleteState(context, l10n),
     );
   }
 
-  Widget _buildIncompleteState(BuildContext context) {
-    const purpleColor = Color(0xFF8A53FF);
+  Widget _buildStrategyBody(
+    BuildContext context,
+    OnboardingProvider provider,
+    AppLocalizations l10n,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 760;
+        final horizontalPadding = isWide ? 32.0 : 16.0;
 
+        return SingleChildScrollView(
+          padding:
+              EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 28),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(l10n),
+                  const SizedBox(height: 18),
+                  _buildProfileSummary(provider, l10n),
+                  const SizedBox(height: 16),
+                  _buildResponsiveCards(
+                    isWide: isWide,
+                    children: [
+                      _buildTextSection(
+                        title: l10n.targetAudienceLabel,
+                        icon: Icons.groups_2_outlined,
+                        accentColor: Colors.blue.shade700,
+                        value: _displayValue(
+                          provider.brandProfile.targetAudience,
+                          l10n,
+                        ),
+                      ),
+                      _buildTextSection(
+                        title: l10n.monetizationTitle,
+                        icon: Icons.payments_outlined,
+                        accentColor: Colors.teal.shade700,
+                        value: _displayValue(
+                          provider.userProfile.whatICanBePaidFor,
+                          l10n,
+                        ),
+                        subtitle: l10n.whatICanBePaidForLabel,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildIkigaiSection(provider, l10n),
+                  const SizedBox(height: 16),
+                  _buildSwotSection(provider, l10n, isWide),
+                  const SizedBox(height: 16),
+                  _buildContentPillarsSection(provider, l10n),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.strategyTitle,
+          style: const TextStyle(
+            fontSize: 26,
+            height: 1.2,
+            fontWeight: FontWeight.w800,
+            color: _inkColor,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.strategySubtitle,
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.45,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIncompleteState(BuildContext context, AppLocalizations l10n) {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
-          child: Container(
+          child: _Panel(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: purpleColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    color: _purpleColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.map_outlined,
-                    color: purpleColor,
+                    color: _purpleColor,
                     size: 34,
                   ),
                 ),
                 const SizedBox(height: 18),
-                const Text(
-                  'Your brand strategy is not complete yet.',
+                Text(
+                  l10n.strategyIncompleteTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: _inkColor,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Complete your setup to unlock your audience, monetization, SWOT, and content pillar strategy.',
+                  l10n.strategyIncompleteBody,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -152,9 +180,9 @@ class StrategyTab extends StatelessWidget {
                       );
                     },
                     icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                    label: const Text('Continue Setup'),
+                    label: Text(l10n.continueSetup),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: purpleColor,
+                      backgroundColor: _purpleColor,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -172,159 +200,388 @@ class StrategyTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionGroup(String title, String content, IconData icon) {
+  Widget _buildProfileSummary(
+    OnboardingProvider provider,
+    AppLocalizations l10n,
+  ) {
+    final brand = provider.brandProfile;
+
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeading(
+            icon: Icons.badge_outlined,
+            title: l10n.profileSummaryTitle,
+            accentColor: _purpleColor,
+          ),
+          const SizedBox(height: 16),
+          _buildKeyValue(
+              l10n.profileNameLabel, brand.selectedProfileName, l10n),
+          _buildKeyValue(l10n.categoryLabel, brand.selectedCategory, l10n),
+          _buildKeyValue(l10n.microNicheLabel, brand.selectedMicroNiche, l10n),
+          _buildKeyValue(l10n.premiseLabel, brand.selectedPremise, l10n),
+          _buildKeyValue(l10n.toneOfVoiceLabel, brand.toneOfVoice, l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIkigaiSection(
+    OnboardingProvider provider,
+    AppLocalizations l10n,
+  ) {
+    final user = provider.userProfile;
+
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeading(
+            icon: Icons.psychology_alt_outlined,
+            title: l10n.ikigaiAnswersTitle,
+            accentColor: Colors.indigo.shade600,
+          ),
+          const SizedBox(height: 16),
+          _buildKeyValue(l10n.whatILoveLabel, user.whatILove, l10n),
+          _buildKeyValue(l10n.whatImGoodAtLabel, user.whatImGoodAt, l10n),
+          _buildKeyValue(
+              l10n.whatTheWorldNeedsLabel, user.whatTheWorldNeeds, l10n),
+          _buildKeyValue(
+              l10n.whatICanBePaidForLabel, user.whatICanBePaidFor, l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSwotSection(
+    OnboardingProvider provider,
+    AppLocalizations l10n,
+    bool isWide,
+  ) {
+    final brand = provider.brandProfile;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title.toUpperCase(),
-          style: const TextStyle(
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 12),
+          child: Text(
+            l10n.swotAnalysisTitle.toUpperCase(),
+            style: TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-              letterSpacing: 1.2),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+              letterSpacing: 0.8,
+              fontWeight: FontWeight.w900,
+              color: Colors.grey.shade500,
+            ),
           ),
-          child: Row(
+        ),
+        _buildResponsiveCards(
+          isWide: isWide,
+          children: [
+            _buildTextSection(
+              title: l10n.strengthsLabel,
+              icon: Icons.trending_up_rounded,
+              accentColor: Colors.green.shade700,
+              value: _displayValue(brand.strengths, l10n),
+            ),
+            _buildTextSection(
+              title: l10n.weaknessesLabel,
+              icon: Icons.warning_amber_rounded,
+              accentColor: Colors.orange.shade700,
+              value: _displayValue(brand.weaknesses, l10n),
+            ),
+            _buildTextSection(
+              title: l10n.opportunitiesLabel,
+              icon: Icons.lightbulb_outline_rounded,
+              accentColor: Colors.blue.shade700,
+              value: _displayValue(brand.opportunities, l10n),
+            ),
+            _buildTextSection(
+              title: l10n.threatsLabel,
+              icon: Icons.shield_outlined,
+              accentColor: Colors.red.shade700,
+              value: _displayValue(brand.threats, l10n),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContentPillarsSection(
+    OnboardingProvider provider,
+    AppLocalizations l10n,
+  ) {
+    final pillars = provider.brandProfile.contentPillars;
+
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeading(
+            icon: Icons.view_column_outlined,
+            title: l10n.contentPillarsTitle,
+            accentColor: Colors.deepPurple.shade600,
+          ),
+          const SizedBox(height: 14),
+          if (pillars.isEmpty)
+            Text(
+              l10n.contentPillarsEmpty,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                color: Colors.grey.shade600,
+              ),
+            )
+          else
+            Column(
+              children: [
+                for (var index = 0; index < pillars.length; index++) ...[
+                  _PillarRow(index: index + 1, text: pillars[index]),
+                  if (index != pillars.length - 1) const SizedBox(height: 10),
+                ],
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResponsiveCards({
+    required bool isWide,
+    required List<Widget> children,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width =
+            isWide ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
+
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            for (final child in children)
+              SizedBox(
+                width: width,
+                child: child,
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTextSection({
+    required String title,
+    required IconData icon,
+    required Color accentColor,
+    required String value,
+    String? subtitle,
+  }) {
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeading(
+            icon: icon,
+            title: title,
+            subtitle: subtitle,
+            accentColor: accentColor,
+          ),
+          const SizedBox(height: 14),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: Color(0xFF333333),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeyValue(
+    String label,
+    String? value,
+    AppLocalizations l10n,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _displayValue(value, l10n),
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.45,
+              fontWeight: FontWeight.w600,
+              color: _inkColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _displayValue(String? value, AppLocalizations l10n) {
+    final trimmed = value?.trim() ?? '';
+    return trimmed.isEmpty ? l10n.notSetYet : value!;
+  }
+}
+
+class _Panel extends StatelessWidget {
+  const _Panel({
+    required this.child,
+    this.padding = const EdgeInsets.all(18),
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: padding,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({
+    required this.icon,
+    required this.title,
+    required this.accentColor,
+    this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: accentColor, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: const Color(0xFF8A53FF), size: 24),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  content.isNotEmpty ? content : 'Not set yet',
-                  style: const TextStyle(
-                      fontSize: 15, height: 1.5, color: Color(0xFF424242)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.25,
+                  fontWeight: FontWeight.w800,
+                  color: StrategyTab._inkColor,
                 ),
               ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  subtitle!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.3,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildSwotGrid(OnboardingProvider provider, bool isTablet) {
-    // Data struktur untuk SWOT - sekarang dari brandProfile
-    final swotData = [
-      {
-        'label': 'Strengths',
-        'val': provider.brandProfile.strengths,
-        'bg': Colors.green.shade50,
-        'acc': Colors.green
-      },
-      {
-        'label': 'Weaknesses',
-        'val': provider.brandProfile.weaknesses,
-        'bg': Colors.orange.shade50,
-        'acc': Colors.orange
-      },
-      {
-        'label': 'Opportunities',
-        'val': 'Lihat bagian monetisasi',
-        'bg': Colors.blue.shade50,
-        'acc': Colors.blue
-      },
-      {
-        'label': 'Threats',
-        'val': provider.brandProfile.threats,
-        'bg': Colors.red.shade50,
-        'acc': Colors.red
-      },
-    ];
+class _PillarRow extends StatelessWidget {
+  const _PillarRow({
+    required this.index,
+    required this.text,
+  });
 
-    if (isTablet) {
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 1.8,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: 4,
-        itemBuilder: (context, index) {
-          final item = swotData[index];
-          return _buildSwotItem(item['label'] as String, item['val'] as String,
-              item['bg'] as Color, item['acc'] as Color);
-        },
-      );
-    } else {
-      return Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                  child: _buildSwotItem(
-                      'Strengths',
-                      provider.brandProfile.strengths,
-                      Colors.green.shade50,
-                      Colors.green)),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: _buildSwotItem(
-                      'Weaknesses',
-                      provider.brandProfile.weaknesses,
-                      Colors.orange.shade50,
-                      Colors.orange)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                  child: _buildSwotItem(
-                      'Threats',
-                      provider.brandProfile.threats,
-                      Colors.red.shade50,
-                      Colors.red)),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: Container(
-                      height: 140,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.transparent))),
-            ],
-          ),
-        ],
-      );
-    }
-  }
+  final int index;
+  final String text;
 
-  Widget _buildSwotItem(
-      String label, String value, Color bgColor, Color accentColor) {
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      height: 160,
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withOpacity(0.3)),
+        color: const Color(0xFFF8F9FE),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: TextStyle(
-                  color: accentColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14)),
-          const SizedBox(height: 8),
+          Container(
+            width: 26,
+            height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: StrategyTab._purpleColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '$index',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: StrategyTab._purpleColor,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
-            child: SingleChildScrollView(
-              child: Text(
-                value,
-                style: const TextStyle(fontSize: 13, color: Colors.black87),
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+                color: StrategyTab._inkColor,
               ),
             ),
           ),

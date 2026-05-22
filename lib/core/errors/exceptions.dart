@@ -1,4 +1,4 @@
-/// Custom Exceptions for Domain Layer
+// Custom Exceptions for Domain Layer
 
 class NetworkException implements Exception {
   final String message;
