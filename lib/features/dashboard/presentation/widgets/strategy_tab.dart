@@ -57,8 +57,6 @@ class StrategyTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(l10n),
-                  const SizedBox(height: 18),
                   _buildProfileSummary(provider, l10n),
                   const SizedBox(height: 16),
                   _buildResponsiveCards(
@@ -88,32 +86,6 @@ class StrategyTab extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildHeader(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.strategyTitle,
-          style: const TextStyle(
-            fontSize: 26,
-            height: 1.2,
-            fontWeight: FontWeight.w800,
-            color: _inkColor,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          l10n.strategySubtitle,
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.45,
-            color: Colors.grey.shade600,
-          ),
-        ),
-      ],
     );
   }
 

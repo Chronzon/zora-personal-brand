@@ -75,22 +75,6 @@ class _ContentTabState extends State<ContentTab> {
           body: _DashboardBackground(
             child: CustomScrollView(
               slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    20,
-                    horizontalPadding,
-                    0,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1120),
-                        child: _buildHeader(l10n),
-                      ),
-                    ),
-                  ),
-                ),
                 if (contentProvider.generatedScripts.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
@@ -152,7 +136,7 @@ class _ContentTabState extends State<ContentTab> {
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
                       horizontalPadding,
-                      18,
+                      20,
                       horizontalPadding,
                       96,
                     ),
@@ -176,32 +160,6 @@ class _ContentTabState extends State<ContentTab> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildHeader(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.contentScriptHistory,
-          style: const TextStyle(
-            fontSize: 26,
-            height: 1.2,
-            fontWeight: FontWeight.w800,
-            color: _inkColor,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          l10n.contentHistorySubtitle,
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.45,
-            color: Colors.grey.shade600,
-          ),
-        ),
-      ],
     );
   }
 }

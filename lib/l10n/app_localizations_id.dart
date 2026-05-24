@@ -457,10 +457,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get contentScriptHistory => 'Riwayat Script';
 
   @override
-  String get contentHistorySubtitle =>
-      'Tinjau script yang sudah dibuat dan buka yang ingin digunakan lagi.';
-
-  @override
   String get contentEmptyTitle => 'Belum Ada Script';
 
   @override
@@ -491,10 +487,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get strategyTitle => 'Strategi Brand';
-
-  @override
-  String get strategySubtitle =>
-      'Tinjau positioning, Ikigai, SWOT, dan content pillar Anda dalam satu tempat.';
 
   @override
   String get strategyIncompleteTitle => 'Strategi brand Anda belum lengkap.';

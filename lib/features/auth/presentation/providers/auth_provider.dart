@@ -9,10 +9,15 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider(this._repository);
 
   bool _isLoading = false;
+  bool _isGoogleConnectionLoading = false;
+  bool _hasLoadedGoogleConnection = false;
+  GoogleConnection? _googleConnection;
   String? _errorMessage;
 
   // Getters
   bool get isLoading => _isLoading;
+  bool get isGoogleConnectionLoading => _isGoogleConnectionLoading;
+  GoogleConnection? get googleConnection => _googleConnection;
   String? get errorMessage => _errorMessage;
   ApiUser? get currentUser => _repository.currentUser;
 
@@ -30,10 +35,31 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> completeOAuthSession(String token) async {
+    _setLoading(true);
+    try {
+      final completed = await _repository.completeOAuthSession(token);
+      _resetGoogleConnection();
+      return completed;
+    } catch (e, stackTrace) {
+      final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
+      _errorMessage = failure.message;
+      return false;
+    } finally {
+      _setLoading(false, clearError: false);
+    }
+  }
+
+  void setExternalAuthError(String message) {
+    _errorMessage = message;
+    notifyListeners();
+  }
+
   Future<bool> signIn(String email, String password) async {
     _setLoading(true);
     try {
       await _repository.signIn(email: email, password: password);
+      _resetGoogleConnection();
       return true; // Sukses
     } catch (e, stackTrace) {
       final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
@@ -49,6 +75,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _repository.signUp(
           email: email, password: password, fullName: fullName);
+      _resetGoogleConnection();
       return true; // Sukses
     } catch (e, stackTrace) {
       final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
@@ -61,18 +88,51 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> signOut() async {
     await _repository.signOut();
+    _resetGoogleConnection();
     notifyListeners();
+  }
+
+  Future<void> loadGoogleConnection({bool force = false}) async {
+    if (currentUser == null || currentUser!.isAnonymous) return;
+    if (_isGoogleConnectionLoading) return;
+    if (_hasLoadedGoogleConnection && !force) return;
+
+    _isGoogleConnectionLoading = true;
+    notifyListeners();
+
+    try {
+      _googleConnection = await _repository.getGoogleConnection();
+      _hasLoadedGoogleConnection = true;
+    } catch (e, stackTrace) {
+      final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
+      _errorMessage = failure.message;
+    } finally {
+      _isGoogleConnectionLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> signInWithGoogle() async {
     _setLoading(true);
     try {
-      await _repository.signInWithGoogle();
-      return true; // Sukses
+      return await _repository.signInWithGoogle();
     } catch (e, stackTrace) {
       final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
       _errorMessage = failure.message;
       return false; // Gagal
+    } finally {
+      _setLoading(false, clearError: false);
+    }
+  }
+
+  Future<bool> connectGoogle() async {
+    _setLoading(true);
+    try {
+      return await _repository.connectGoogle();
+    } catch (e, stackTrace) {
+      final failure = ErrorHandler.handleException(e, stackTrace: stackTrace);
+      _errorMessage = failure.message;
+      return false;
     } finally {
       _setLoading(false, clearError: false);
     }
@@ -84,5 +144,11 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = null; // Reset error saat loading mulai
     }
     notifyListeners();
+  }
+
+  void _resetGoogleConnection() {
+    _googleConnection = null;
+    _hasLoadedGoogleConnection = false;
+    _isGoogleConnectionLoading = false;
   }
 }

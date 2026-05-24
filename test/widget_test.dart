@@ -21,6 +21,9 @@ class FakeAuthRepository implements AuthRepository {
   Future<bool> restoreSession() async => user != null;
 
   @override
+  Future<bool> completeOAuthSession(String token) async => user != null;
+
+  @override
   Future<AuthResult> signIn({
     required String email,
     required String password,
@@ -54,6 +57,14 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<bool> signInWithGoogle() async => false;
+
+  @override
+  Future<bool> connectGoogle() async => false;
+
+  @override
+  Future<GoogleConnection> getGoogleConnection() async {
+    return const GoogleConnection(connected: false);
+  }
 }
 
 void main() {

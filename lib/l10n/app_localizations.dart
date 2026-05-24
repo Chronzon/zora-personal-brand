@@ -902,12 +902,6 @@ abstract class AppLocalizations {
   /// **'Script History'**
   String get contentScriptHistory;
 
-  /// No description provided for @contentHistorySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Review generated scripts and open the ones you want to reuse.'**
-  String get contentHistorySubtitle;
-
   /// No description provided for @contentEmptyTitle.
   ///
   /// In en, this message translates to:
@@ -967,12 +961,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Brand Strategy'**
   String get strategyTitle;
-
-  /// No description provided for @strategySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Review your positioning, Ikigai, SWOT, and content pillars in one place.'**
-  String get strategySubtitle;
 
   /// No description provided for @strategyIncompleteTitle.
   ///

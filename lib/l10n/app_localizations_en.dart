@@ -453,10 +453,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contentScriptHistory => 'Script History';
 
   @override
-  String get contentHistorySubtitle =>
-      'Review generated scripts and open the ones you want to reuse.';
-
-  @override
   String get contentEmptyTitle => 'No Scripts Generated Yet';
 
   @override
@@ -487,10 +483,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get strategyTitle => 'Brand Strategy';
-
-  @override
-  String get strategySubtitle =>
-      'Review your positioning, Ikigai, SWOT, and content pillars in one place.';
 
   @override
   String get strategyIncompleteTitle =>
