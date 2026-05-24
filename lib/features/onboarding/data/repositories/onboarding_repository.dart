@@ -26,9 +26,9 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
     );
   }
 
-  bool get _hasRealUser {
+  bool get _hasPersistableUser {
     final user = _apiClient.currentUser;
-    return _apiClient.isAuthenticated && user != null && !user.isAnonymous;
+    return _apiClient.isAuthenticated && user != null;
   }
 
   @override
@@ -53,7 +53,7 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
   @override
   Future<Result<void, Failure>> saveUserProfile(UserProfile profile) async {
     try {
-      if (!_hasRealUser) return _authRequiredFailure<void>();
+      if (!_hasPersistableUser) return _authRequiredFailure<void>();
 
       await _apiClient.put('/user-profile', body: profile.toJson());
 
@@ -82,9 +82,35 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
   @override
   Future<Result<void, Failure>> saveBrandProfile(BrandProfile profile) async {
     try {
-      if (!_hasRealUser) return _authRequiredFailure<void>();
+      if (!_hasPersistableUser) return _authRequiredFailure<void>();
 
       await _apiClient.put('/brand-profile', body: profile.toJson());
+
+      return const Success(null);
+    } catch (e) {
+      return ResultFailure(ErrorHandler.handleException(e));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> saveOnboardingAnswer({
+    required String onboardingStep,
+    required Map<String, dynamic> selectedAnswer,
+    required String source,
+    String? modelProvider,
+    String? modelName,
+  }) async {
+    try {
+      await _apiClient.ensureGuestSession();
+      if (!_hasPersistableUser) return _authRequiredFailure<void>();
+
+      await _apiClient.post('/onboarding-answers', body: {
+        'onboarding_step': onboardingStep,
+        'selected_answer': selectedAnswer,
+        'source': source,
+        'model_provider': modelProvider,
+        'model_name': modelName,
+      });
 
       return const Success(null);
     } catch (e) {
@@ -99,7 +125,11 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
       UserProfile profile, String languageCode) async {
     try {
       // 1. Save Profile First
-      final saveResult = await saveUserProfile(profile);
+      final saveResult = await saveOnboardingAnswer(
+        onboardingStep: 'user_profile',
+        selectedAnswer: profile.toJson(),
+        source: 'manual',
+      );
       if (saveResult.isFailure) return ResultFailure(saveResult.failure);
 
       // 2. Prepare Payload
@@ -122,7 +152,7 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
       return aiResult.map((data) {
         try {
           final resultString = data['result'] as String;
-          return _parseIdentityResponse(resultString);
+          return _withAiMetadata(_parseIdentityResponse(resultString), data);
         } catch (e) {
           throw DataException("Gagal memproses saran identitas dari AI.");
         }
@@ -143,7 +173,17 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
     required String languageCode,
   }) async {
     try {
-      if (!_hasRealUser) return _authRequiredFailure<Map<String, dynamic>>();
+      final saveResult = await saveOnboardingAnswer(
+        onboardingStep: 'swot',
+        selectedAnswer: {
+          'strengths': strengths,
+          'weaknesses': weaknesses,
+          'opportunities': opportunities,
+          'threats': threats,
+        },
+        source: 'manual',
+      );
+      if (saveResult.isFailure) return ResultFailure(saveResult.failure);
 
       final payload = {
         'selectedProfileName': brandProfile.selectedProfileName,
@@ -165,7 +205,7 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
       return aiResult.map((data) {
         try {
           final resultString = data['result'] as String;
-          return _parsePremiseResponse(resultString);
+          return _withAiMetadata(_parsePremiseResponse(resultString), data);
         } catch (e) {
           throw DataException("Gagal memproses saran premise dari AI.");
         }
@@ -181,9 +221,14 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
     required String languageCode,
   }) async {
     try {
-      if (!_hasRealUser) return _authRequiredFailure<Map<String, dynamic>>();
-
-      final saveResult = await saveBrandProfile(brandProfile);
+      final saveResult = await saveOnboardingAnswer(
+        onboardingStep: 'tone_audience',
+        selectedAnswer: {
+          'tone_of_voice': brandProfile.toneOfVoice,
+          'target_audience': brandProfile.targetAudience,
+        },
+        source: 'manual',
+      );
       if (saveResult.isFailure) return ResultFailure(saveResult.failure);
 
       final payload = {
@@ -204,7 +249,7 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
       return aiResult.map((data) {
         try {
           final resultString = data['result'] as String;
-          return _parsePillarResponse(resultString);
+          return _withAiMetadata(_parsePillarResponse(resultString), data);
         } catch (e) {
           throw DataException("Gagal memproses content pillar dari AI.");
         }
@@ -237,6 +282,17 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
       'microNiches': microNiches,
       'monetizationOptions': monetizationOptions,
     };
+  }
+
+  Map<String, dynamic> _withAiMetadata(
+    Map<String, dynamic> parsed,
+    Map<String, dynamic> response,
+  ) {
+    final metadata = response['ai'];
+    if (metadata is Map<String, dynamic>) {
+      parsed['aiMetadata'] = metadata;
+    }
+    return parsed;
   }
 
   Map<String, dynamic> _parsePremiseResponse(String text) {

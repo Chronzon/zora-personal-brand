@@ -31,6 +31,8 @@ return [
     'ai' => [
         'provider' => env('AI_PROVIDER', 'local'),
         'model' => env('AI_MODEL'),
+        'fallback_provider' => env('AI_FALLBACK_PROVIDER'),
+        'fallback_model' => env('AI_FALLBACK_MODEL'),
     ],
 
     'openrouter' => [

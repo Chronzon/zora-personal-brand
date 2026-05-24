@@ -11,13 +11,16 @@ class FakeOnboardingRepository implements IOnboardingRepository {
     UserProfile? userProfile,
     BrandProfile? brandProfile,
     Map<String, dynamic>? identityResponse,
+    Map<String, dynamic>? pillarsResponse,
   })  : _userProfile = userProfile ?? UserProfile(),
         _brandProfile = brandProfile,
-        _identityResponse = identityResponse ?? const {};
+        _identityResponse = identityResponse ?? const {},
+        _pillarsResponse = pillarsResponse ?? const {};
 
   final UserProfile _userProfile;
   final BrandProfile? _brandProfile;
   final Map<String, dynamic> _identityResponse;
+  final Map<String, dynamic> _pillarsResponse;
 
   @override
   Future<Result<UserProfile, Failure>> getUserProfile() async {
@@ -36,6 +39,17 @@ class FakeOnboardingRepository implements IOnboardingRepository {
 
   @override
   Future<Result<void, Failure>> saveBrandProfile(BrandProfile profile) async {
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<void, Failure>> saveOnboardingAnswer({
+    required String onboardingStep,
+    required Map<String, dynamic> selectedAnswer,
+    required String source,
+    String? modelProvider,
+    String? modelName,
+  }) async {
     return const Success(null);
   }
 
@@ -65,7 +79,7 @@ class FakeOnboardingRepository implements IOnboardingRepository {
     required BrandProfile brandProfile,
     required String languageCode,
   }) async {
-    return const Success({});
+    return Success(_pillarsResponse);
   }
 }
 
@@ -116,6 +130,34 @@ void main() {
     expect(provider.contentPillarOptions, ['Education', 'Case studies']);
     expect(provider.isOnboardingComplete, isTrue);
     expect(provider.onboardingStatus, OnboardingStatus.completed);
+  });
+
+  test('generated content pillars are suggestions until accepted', () async {
+    final provider = OnboardingProvider(
+      FakeOnboardingRepository(
+        brandProfile: BrandProfile(
+          selectedProfileName: 'Alya AI Studio',
+          selectedCategory: 'Education',
+          selectedMicroNiche: 'AI content workflows',
+          selectedPremise: 'Helping creators use AI clearly.',
+          toneOfVoice: 'Educational',
+          targetAudience: 'Creators',
+        ),
+        pillarsResponse: const {
+          'aiResponse': '1. Education\n2. Story\n3. Community\n4. Offers',
+          'contentPillarOptions': ['Education', 'Story', 'Community', 'Offers'],
+        },
+      ),
+    );
+
+    await provider.loadUserData();
+    await provider.generateContentPillars('en');
+
+    expect(provider.isOnboardingComplete, isFalse);
+
+    await provider.saveAcceptedContentPillars();
+
+    expect(provider.isOnboardingComplete, isTrue);
   });
 
   test('brand profile parses monetization options from json', () {

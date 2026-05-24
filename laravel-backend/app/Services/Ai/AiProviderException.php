@@ -6,7 +6,11 @@ use RuntimeException;
 
 class AiProviderException extends RuntimeException
 {
-    public function __construct(string $message, private readonly int $statusCode = 502)
+    public function __construct(
+        string $message,
+        private readonly int $statusCode = 502,
+        private readonly string $category = 'unknown',
+    )
     {
         parent::__construct($message);
     }
@@ -15,5 +19,9 @@ class AiProviderException extends RuntimeException
     {
         return $this->statusCode;
     }
-}
 
+    public function category(): string
+    {
+        return $this->category;
+    }
+}

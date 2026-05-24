@@ -9,7 +9,7 @@ class SelectionScreen extends StatefulWidget {
   final String subtitle;
   final List<String> options;
   final Function(String) onSelect;
-  final VoidCallback onNext;
+  final Future<void> Function() onNext;
 
   const SelectionScreen({
     super.key,
@@ -26,6 +26,18 @@ class SelectionScreen extends StatefulWidget {
 
 class _SelectionScreenState extends State<SelectionScreen> {
   String? _selectedValue;
+  bool _isSaving = false;
+
+  Future<void> _handleNext() async {
+    setState(() => _isSaving = true);
+    try {
+      await widget.onNext();
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,8 +107,9 @@ class _SelectionScreenState extends State<SelectionScreen> {
                           ),
                           const SizedBox(width: 16),
                           ElevatedButton(
-                            onPressed:
-                                _selectedValue != null ? widget.onNext : null,
+                            onPressed: _selectedValue != null && !_isSaving
+                                ? _handleNext
+                                : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: purpleColor,
                               disabledBackgroundColor: Colors.grey.shade200,
@@ -108,20 +121,29 @@ class _SelectionScreenState extends State<SelectionScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  l10n.continueButton,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                            child: _isSaving
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        l10n.continueButton,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.arrow_forward, size: 16),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.arrow_forward, size: 16),
-                              ],
-                            ),
                           )
                         ],
                       ),
@@ -180,8 +202,9 @@ class _SelectionScreenState extends State<SelectionScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed:
-                              _selectedValue != null ? widget.onNext : null,
+                          onPressed: _selectedValue != null && !_isSaving
+                              ? _handleNext
+                              : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: purpleColor,
                             disabledBackgroundColor: Colors.grey.shade200,
@@ -193,20 +216,29 @@ class _SelectionScreenState extends State<SelectionScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                l10n.continueButton,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                          child: _isSaving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      l10n.continueButton,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.arrow_forward, size: 16),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward, size: 16),
-                            ],
-                          ),
                         ),
                       )
                     ] else

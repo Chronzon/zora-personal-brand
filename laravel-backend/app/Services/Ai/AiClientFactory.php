@@ -6,9 +6,21 @@ class AiClientFactory
 {
     public function make(): AiClientInterface
     {
-        $provider = strtolower((string) config('services.ai.provider', 'local'));
-        $model = config('services.ai.model');
+        $primary = $this->makeProvider(
+            strtolower((string) config('services.ai.provider', 'local')),
+            config('services.ai.model'),
+        );
 
+        $fallbackProvider = config('services.ai.fallback_provider');
+        $fallback = is_string($fallbackProvider) && trim($fallbackProvider) !== ''
+            ? $this->makeProvider(strtolower($fallbackProvider), config('services.ai.fallback_model'))
+            : null;
+
+        return new FallbackAiClient($primary, $fallback);
+    }
+
+    private function makeProvider(string $provider, mixed $model): AiProviderClientInterface
+    {
         return match ($provider) {
             'local' => new LocalAiClient,
             'openrouter' => new OpenRouterAiClient(
@@ -19,8 +31,7 @@ class AiClientFactory
                 config('services.gemini.key'),
                 is_string($model) ? $model : null,
             ),
-            default => throw new AiProviderException("Unsupported AI provider: {$provider}", 500),
+            default => throw new AiProviderException("Unsupported AI provider: {$provider}", 500, 'invalid_request'),
         };
     }
 }
-

@@ -40,6 +40,17 @@ class FakeStrategyRepository implements IOnboardingRepository {
   }
 
   @override
+  Future<Result<void, Failure>> saveOnboardingAnswer({
+    required String onboardingStep,
+    required Map<String, dynamic> selectedAnswer,
+    required String source,
+    String? modelProvider,
+    String? modelName,
+  }) async {
+    return const Success(null);
+  }
+
+  @override
   Future<Result<Map<String, dynamic>, Failure>> generateIdentity(
     UserProfile profile,
     String languageCode,

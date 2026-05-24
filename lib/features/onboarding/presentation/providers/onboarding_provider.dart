@@ -33,6 +33,7 @@ class OnboardingProvider extends ChangeNotifier {
   String? _aiResponse;
   String? _premiseAiResponse;
   String? _pillarAiResponse;
+  Map<String, dynamic>? _lastAiMetadata;
 
   OnboardingProvider(this._repository);
 
@@ -55,6 +56,8 @@ class OnboardingProvider extends ChangeNotifier {
   String? get aiResponse => _aiResponse;
   String? get premiseAiResponse => _premiseAiResponse;
   String? get pillarAiResponse => _pillarAiResponse;
+  Map<String, dynamic>? get lastAiMetadata =>
+      _lastAiMetadata == null ? null : Map.unmodifiable(_lastAiMetadata!);
 
   bool get isOnboardingComplete => _brandProfile.contentPillars.isNotEmpty;
 
@@ -173,6 +176,77 @@ class OnboardingProvider extends ChangeNotifier {
 
   // --- ACTIONS (Async with Result Handling) ---
 
+  Future<bool> saveSelectedProfileName() {
+    return _saveAcceptedAnswer(
+      onboardingStep: 'profile_name',
+      selectedAnswer: {
+        'selected_profile_name': _brandProfile.selectedProfileName,
+        'monetization_options': _brandProfile.monetizationOptions,
+      },
+      source: _aiSource,
+      modelProvider: _aiModelProvider,
+      modelName: _aiModelName,
+    );
+  }
+
+  Future<bool> saveSelectedCategory() {
+    return _saveAcceptedAnswer(
+      onboardingStep: 'category',
+      selectedAnswer: {
+        'selected_category': _brandProfile.selectedCategory,
+        'monetization_options': _brandProfile.monetizationOptions,
+      },
+      source: _aiSource,
+      modelProvider: _aiModelProvider,
+      modelName: _aiModelName,
+    );
+  }
+
+  Future<bool> saveSelectedMicroNiche() {
+    return _saveAcceptedAnswer(
+      onboardingStep: 'micro_niche',
+      selectedAnswer: {
+        'selected_micro_niche': _brandProfile.selectedMicroNiche,
+        'monetization_options': _brandProfile.monetizationOptions,
+      },
+      source: _aiSource,
+      modelProvider: _aiModelProvider,
+      modelName: _aiModelName,
+    );
+  }
+
+  Future<bool> saveSelectedPremise() {
+    return _saveAcceptedAnswer(
+      onboardingStep: 'premise',
+      selectedAnswer: {
+        'selected_premise': _brandProfile.selectedPremise,
+      },
+      source: _aiSource,
+      modelProvider: _aiModelProvider,
+      modelName: _aiModelName,
+    );
+  }
+
+  Future<bool> saveAcceptedContentPillars() async {
+    final saved = await _saveAcceptedAnswer(
+      onboardingStep: 'content_pillars',
+      selectedAnswer: {
+        'content_pillars': _contentPillarOptions,
+      },
+      source: _aiSource,
+      modelProvider: _aiModelProvider,
+      modelName: _aiModelName,
+    );
+
+    if (saved) {
+      _brandProfile =
+          _brandProfile.copyWith(contentPillars: _contentPillarOptions);
+      notifyListeners();
+    }
+
+    return saved;
+  }
+
   Future<bool> loadUserData() async {
     _isLoading = true;
     _failure = null;
@@ -218,6 +292,7 @@ class OnboardingProvider extends ChangeNotifier {
 
     result.fold(
       onSuccess: (data) {
+        _recordAiMetadata(data);
         _aiResponse = data['aiResponse'];
         _profileNameOptions =
             List<String>.from(data['profileNames'] ?? const []);
@@ -256,6 +331,7 @@ class OnboardingProvider extends ChangeNotifier {
 
     result.fold(
       onSuccess: (data) {
+        _recordAiMetadata(data);
         _premiseAiResponse = data['aiResponse'];
         _premiseOptions = List<String>.from(data['premiseOptions']);
       },
@@ -279,22 +355,70 @@ class OnboardingProvider extends ChangeNotifier {
 
     await result.foldAsync(
       onSuccess: (data) async {
+        _recordAiMetadata(data);
         _pillarAiResponse = data['aiResponse'];
         _contentPillarOptions = List<String>.from(data['contentPillarOptions']);
-
-        _brandProfile =
-            _brandProfile.copyWith(contentPillars: _contentPillarOptions);
-
-        // Save automatically
-        final saveResult = await _repository.saveBrandProfile(_brandProfile);
-        if (saveResult.isFailure) {
-          _failure = saveResult.failure;
-        }
       },
       onFailure: (f) async => _failure = f,
     );
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  String get _aiSource {
+    final source = _lastAiMetadata?['source'];
+    if (source is String &&
+        const {'primary_ai', 'fallback_ai'}.contains(source)) {
+      return source;
+    }
+    return 'primary_ai';
+  }
+
+  String? get _aiModelProvider {
+    final provider = _lastAiMetadata?['provider'];
+    return provider is String && provider.isNotEmpty ? provider : null;
+  }
+
+  String? get _aiModelName {
+    final model = _lastAiMetadata?['model'];
+    return model is String && model.isNotEmpty ? model : null;
+  }
+
+  void _recordAiMetadata(Map<String, dynamic> data) {
+    final metadata = data['aiMetadata'];
+    if (metadata is Map<String, dynamic>) {
+      _lastAiMetadata = Map<String, dynamic>.from(metadata);
+    }
+  }
+
+  Future<bool> _saveAcceptedAnswer({
+    required String onboardingStep,
+    required Map<String, dynamic> selectedAnswer,
+    required String source,
+    String? modelProvider,
+    String? modelName,
+  }) async {
+    _isLoading = true;
+    _failure = null;
+    notifyListeners();
+
+    final result = await _repository.saveOnboardingAnswer(
+      onboardingStep: onboardingStep,
+      selectedAnswer: selectedAnswer,
+      source: source,
+      modelProvider: modelProvider,
+      modelName: modelName,
+    );
+
+    _isLoading = false;
+
+    result.fold(
+      onSuccess: (_) {},
+      onFailure: (f) => _failure = f,
+    );
+
+    notifyListeners();
+    return result.isSuccess;
   }
 }

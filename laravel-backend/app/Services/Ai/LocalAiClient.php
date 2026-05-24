@@ -2,8 +2,18 @@
 
 namespace App\Services\Ai;
 
-class LocalAiClient implements AiClientInterface
+class LocalAiClient implements AiProviderClientInterface
 {
+    public function providerName(): string
+    {
+        return 'local';
+    }
+
+    public function modelName(): ?string
+    {
+        return 'deterministic';
+    }
+
     /**
      * @param array<string, mixed> $context
      */

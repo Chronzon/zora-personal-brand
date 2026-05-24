@@ -99,6 +99,40 @@ class ApiFeatureTest extends TestCase
             ->assertJsonPath('data.content_pillars.2', 'Q&A');
     }
 
+    public function test_onboarding_answer_saves_progress_and_updates_brand_profile(): void
+    {
+        $token = $this->registerToken('onboarding-answer@example.test');
+
+        $this->withToken($token)
+            ->postJson('/api/onboarding-answers', [
+                'onboarding_step' => 'profile_name',
+                'selected_answer' => [
+                    'selected_profile_name' => 'Creator Strategy Lab',
+                    'monetization_options' => ['Paid workshops'],
+                ],
+                'source' => 'fallback_ai',
+                'model_provider' => 'openrouter',
+                'model_name' => 'openai/gpt-oss-test',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.onboarding_step', 'profile_name')
+            ->assertJsonPath('data.source', 'fallback_ai');
+
+        $this->assertDatabaseHas('onboarding_answers', [
+            'onboarding_step' => 'profile_name',
+            'source' => 'fallback_ai',
+            'model_provider' => 'openrouter',
+            'model_name' => 'openai/gpt-oss-test',
+        ]);
+
+        $this->withToken($token)
+            ->getJson('/api/onboarding-progress')
+            ->assertOk()
+            ->assertJsonPath('brand_profile.selected_profile_name', 'Creator Strategy Lab')
+            ->assertJsonPath('brand_profile.monetization_options.0', 'Paid workshops')
+            ->assertJsonPath('completed_steps.0.onboarding_step', 'profile_name');
+    }
+
     public function test_generated_scripts_are_user_scoped(): void
     {
         $ownerToken = $this->registerToken('owner@example.test');

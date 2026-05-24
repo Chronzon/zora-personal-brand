@@ -239,6 +239,9 @@ class ApiClient {
       final message = decoded['message'];
       if (message is String && message.isNotEmpty) return message;
 
+      final error = decoded['error'];
+      if (error is String && error.isNotEmpty) return error;
+
       final errors = decoded['errors'];
       if (errors is Map && errors.isNotEmpty) {
         final firstValue = errors.values.first;
