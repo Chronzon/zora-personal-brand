@@ -525,6 +525,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get monetizationTitle => 'Monetisasi';
 
   @override
+  String get monetizationYourAnswerLabel => 'Jawaban Anda';
+
+  @override
+  String get monetizationAiSuggestionsLabel => 'Saran AI';
+
+  @override
   String get ikigaiAnswersTitle => 'Jawaban Ikigai';
 
   @override

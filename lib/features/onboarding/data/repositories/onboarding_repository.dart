@@ -122,7 +122,7 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
       return aiResult.map((data) {
         try {
           final resultString = data['result'] as String;
-          return _parseIdentityResponse(resultString, languageCode);
+          return _parseIdentityResponse(resultString);
         } catch (e) {
           throw DataException("Gagal memproses saran identitas dari AI.");
         }
@@ -216,8 +216,7 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
 
   // --- PRIVATE PARSING HELPERS (Diambil dari logika lama Anda) ---
 
-  Map<String, dynamic> _parseIdentityResponse(
-      String text, String languageCode) {
+  Map<String, dynamic> _parseIdentityResponse(String text) {
     String cleanText =
         text.replaceAll('```json', '').replaceAll('```', '').trim();
     final Map<String, dynamic> jsonData = json.decode(cleanText);
@@ -228,16 +227,15 @@ class OnboardingRepositoryImpl implements IOnboardingRepository {
         List<String>.from(jsonData['niches'] ?? []);
     final List<String> profileNames =
         List<String>.from(jsonData['profile_names'] ?? []);
-    final opportunities = languageCode == 'en'
-        ? 'Consulting, Digital Products, Sponsored Content, Memberships, Workshops'
-        : 'Konsultasi, Produk Digital, Konten Sponsor, Membership, Workshop';
+    final List<String> monetizationOptions =
+        List<String>.from(jsonData['monetization_options'] ?? []);
 
     return {
       'aiResponse': text,
       'profileNames': profileNames,
       'categories': categories,
       'microNiches': microNiches,
-      'opportunities': opportunities,
+      'monetizationOptions': monetizationOptions,
     };
   }
 

@@ -76,6 +76,7 @@ class OnboardingProvider extends ChangeNotifier {
             _brandProfile.weaknesses.trim().isNotEmpty ||
             _brandProfile.opportunities.trim().isNotEmpty ||
             _brandProfile.threats.trim().isNotEmpty ||
+            _brandProfile.monetizationOptions.isNotEmpty ||
             _brandProfile.contentPillars.isNotEmpty;
 
     return hasUserData || hasBrandData;
@@ -218,12 +219,15 @@ class OnboardingProvider extends ChangeNotifier {
     result.fold(
       onSuccess: (data) {
         _aiResponse = data['aiResponse'];
-        _profileNameOptions = List<String>.from(data['profileNames']);
-        _categoryOptions = List<String>.from(data['categories']);
-        _microNicheOptions = List<String>.from(data['microNiches']);
+        _profileNameOptions =
+            List<String>.from(data['profileNames'] ?? const []);
+        _categoryOptions = List<String>.from(data['categories'] ?? const []);
+        _microNicheOptions = List<String>.from(data['microNiches'] ?? const []);
 
-        _brandProfile =
-            _brandProfile.copyWith(opportunities: data['opportunities']);
+        _brandProfile = _brandProfile.copyWith(
+          monetizationOptions:
+              List<String>.from(data['monetizationOptions'] ?? const []),
+        );
       },
       onFailure: (f) {
         _failure = f;

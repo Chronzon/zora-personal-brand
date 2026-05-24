@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
     'weaknesses',
     'opportunities',
     'threats',
+    'monetization_options',
     'content_pillars',
 ])]
 class BrandProfile extends Model
@@ -24,6 +25,7 @@ class BrandProfile extends Model
     protected function casts(): array
     {
         return [
+            'monetization_options' => 'array',
             'content_pillars' => 'array',
         ];
     }

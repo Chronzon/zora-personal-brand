@@ -28,6 +28,7 @@ create table brand_profiles (
   weaknesses text,
   opportunities text,
   threats text,
+  monetization_options jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

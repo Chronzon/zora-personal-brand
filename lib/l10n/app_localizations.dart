@@ -1028,6 +1028,18 @@ abstract class AppLocalizations {
   /// **'Monetization'**
   String get monetizationTitle;
 
+  /// No description provided for @monetizationYourAnswerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your answer'**
+  String get monetizationYourAnswerLabel;
+
+  /// No description provided for @monetizationAiSuggestionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AI suggestions'**
+  String get monetizationAiSuggestionsLabel;
+
   /// No description provided for @ikigaiAnswersTitle.
   ///
   /// In en, this message translates to:

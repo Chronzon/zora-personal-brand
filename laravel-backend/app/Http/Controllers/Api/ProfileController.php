@@ -55,6 +55,8 @@ class ProfileController extends Controller
             'weaknesses' => ['nullable', 'string'],
             'opportunities' => ['nullable', 'string'],
             'threats' => ['nullable', 'string'],
+            'monetization_options' => ['nullable', 'array'],
+            'monetization_options.*' => ['string', 'max:255'],
             'content_pillars' => ['nullable', 'array'],
             'content_pillars.*' => ['string', 'max:255'],
         ]);

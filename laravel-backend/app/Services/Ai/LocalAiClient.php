@@ -18,9 +18,18 @@ class LocalAiClient implements AiClientInterface
                     ($payload['fullName'] ?? 'Personal').' Growth Lab',
                     'Authentic Builder',
                     'Niche Authority',
+                    'Practical Mentor',
+                    'Creator Strategy Lab',
                 ],
-                'categories' => ['Education', 'Personal Development', 'Digital Creator'],
-                'niches' => ['Career storytelling', 'Practical self-improvement', 'Creator education'],
+                'categories' => ['Education', 'Personal Development', 'Digital Creator', 'Consulting', 'Community Building'],
+                'niches' => ['Career storytelling', 'Practical self-improvement', 'Creator education', 'Skill-based consulting', 'Audience community'],
+                'monetization_options' => [
+                    'Paid workshops',
+                    'Content audits',
+                    'Digital guides',
+                    'Creator consulting',
+                    'Membership community',
+                ],
             ], JSON_PRETTY_PRINT),
             'generate_premise' => "1. \"Helping ambitious beginners build a practical personal brand from their real skills.\"\n\n2. \"Turning everyday expertise into useful content that earns trust.\"\n\n3. \"A clear, honest guide for people who want to grow online without pretending.\"",
             'generate_pillars' => "1. Personal Story\n2. Practical Tutorials\n3. Industry Insight\n4. Audience Q&A",
@@ -47,4 +56,3 @@ class LocalAiClient implements AiClientInterface
         };
     }
 }
-

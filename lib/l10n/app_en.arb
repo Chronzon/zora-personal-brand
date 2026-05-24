@@ -186,6 +186,8 @@
   "premiseLabel": "Premise",
   "toneOfVoiceLabel": "Tone of Voice",
   "monetizationTitle": "Monetization",
+  "monetizationYourAnswerLabel": "Your answer",
+  "monetizationAiSuggestionsLabel": "AI suggestions",
   "ikigaiAnswersTitle": "Ikigai Answers",
   "swotAnalysisTitle": "SWOT Analysis",
   "contentPillarsTitle": "Content Pillars",

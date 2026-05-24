@@ -73,16 +73,7 @@ class StrategyTab extends StatelessWidget {
                           l10n,
                         ),
                       ),
-                      _buildTextSection(
-                        title: l10n.monetizationTitle,
-                        icon: Icons.payments_outlined,
-                        accentColor: Colors.teal.shade700,
-                        value: _displayValue(
-                          provider.userProfile.whatICanBePaidFor,
-                          l10n,
-                        ),
-                        subtitle: l10n.whatICanBePaidForLabel,
-                      ),
+                      _buildMonetizationSection(provider, l10n),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -405,6 +396,62 @@ class StrategyTab extends StatelessWidget {
     );
   }
 
+  Widget _buildMonetizationSection(
+    OnboardingProvider provider,
+    AppLocalizations l10n,
+  ) {
+    final options = provider.brandProfile.monetizationOptions;
+
+    return _Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeading(
+            icon: Icons.payments_outlined,
+            title: l10n.monetizationTitle,
+            subtitle: l10n.whatICanBePaidForLabel,
+            accentColor: Colors.teal.shade700,
+          ),
+          const SizedBox(height: 14),
+          _LabelledText(
+            label: l10n.monetizationYourAnswerLabel,
+            value: _displayValue(provider.userProfile.whatICanBePaidFor, l10n),
+          ),
+          const SizedBox(height: 14),
+          Divider(height: 1, color: Colors.grey.shade200),
+          const SizedBox(height: 14),
+          Text(
+            l10n.monetizationAiSuggestionsLabel,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (options.isEmpty)
+            Text(
+              l10n.notSetYet,
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: Color(0xFF333333),
+              ),
+            )
+          else
+            Column(
+              children: [
+                for (var index = 0; index < options.length; index++) ...[
+                  _SuggestionRow(text: options[index]),
+                  if (index != options.length - 1) const SizedBox(height: 8),
+                ],
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildKeyValue(
     String label,
     String? value,
@@ -441,6 +488,78 @@ class StrategyTab extends StatelessWidget {
   String _displayValue(String? value, AppLocalizations l10n) {
     final trimmed = value?.trim() ?? '';
     return trimmed.isEmpty ? l10n.notSetYet : value!;
+  }
+}
+
+class _LabelledText extends StatelessWidget {
+  const _LabelledText({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            height: 1.5,
+            color: Color(0xFF333333),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SuggestionRow extends StatelessWidget {
+  const _SuggestionRow({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          margin: const EdgeInsets.only(top: 7),
+          decoration: BoxDecoration(
+            color: Colors.teal.shade600,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.45,
+              fontWeight: FontWeight.w600,
+              color: StrategyTab._inkColor,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

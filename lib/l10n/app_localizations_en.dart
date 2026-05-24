@@ -522,6 +522,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monetizationTitle => 'Monetization';
 
   @override
+  String get monetizationYourAnswerLabel => 'Your answer';
+
+  @override
+  String get monetizationAiSuggestionsLabel => 'AI suggestions';
+
+  @override
   String get ikigaiAnswersTitle => 'Ikigai Answers';
 
   @override

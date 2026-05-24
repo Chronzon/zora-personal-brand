@@ -28,7 +28,9 @@ class AiProcessFeatureTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonStructure(['result'])
-            ->assertJsonPath('result', fn ($result) => is_string($result) && str_contains($result, 'Zora Growth Lab'));
+            ->assertJsonPath('result', fn ($result) => is_string($result)
+                && str_contains($result, 'Zora Growth Lab')
+                && str_contains($result, 'monetization_options'));
     }
 
     public function test_process_ai_returns_clear_error_for_missing_openrouter_key(): void
@@ -67,4 +69,3 @@ class AiProcessFeatureTest extends TestCase
         return $response->json('token');
     }
 }
-

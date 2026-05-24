@@ -84,15 +84,18 @@ class ApiFeatureTest extends TestCase
                 'weaknesses' => 'Overthinking',
                 'opportunities' => 'Creator economy growth',
                 'threats' => 'Generic advice',
+                'monetization_options' => ['Paid workshops', 'Content audits'],
                 'content_pillars' => ['Story', 'Tutorial', 'Q&A'],
             ])
             ->assertOk()
+            ->assertJsonPath('data.monetization_options.0', 'Paid workshops')
             ->assertJsonPath('data.content_pillars.0', 'Story');
 
         $this->withToken($token)
             ->getJson('/api/brand-profile')
             ->assertOk()
             ->assertJsonPath('data.selected_profile_name', 'Creator Strategy Lab')
+            ->assertJsonPath('data.monetization_options.1', 'Content audits')
             ->assertJsonPath('data.content_pillars.2', 'Q&A');
     }
 
@@ -176,11 +179,13 @@ class ApiFeatureTest extends TestCase
         $this->withToken($token)
             ->putJson('/api/brand-profile', [
                 'selected_profile_name' => str_repeat('b', 256),
+                'monetization_options' => ['Valid', str_repeat('m', 256)],
                 'content_pillars' => ['Valid', str_repeat('c', 256)],
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'selected_profile_name',
+                'monetization_options.1',
                 'content_pillars.1',
             ]);
     }
