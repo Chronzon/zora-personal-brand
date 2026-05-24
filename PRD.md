@@ -1,54 +1,73 @@
-# PRD - Personal Branding Zora
+# PRD - Zora Personal Branding AI
 
 ## 1. Product Overview
 
-**Personal Branding Zora** adalah aplikasi Flutter untuk membantu customer membangun fondasi personal branding secara bertahap. Aplikasi memandu customer dari input identitas diri, pemilihan positioning, analisis SWOT, pembuatan premise, content pillar, hingga pembuatan ide konten dan script.
+Zora Personal Branding AI adalah aplikasi Flutter Web yang membantu customer membangun fondasi personal branding secara bertahap. Aplikasi memandu customer dari discovery identitas diri, positioning, analisis SWOT, premise, content pillars, ide konten, hingga script generation.
 
-Versi saat ini berjalan dengan frontend Flutter dan backend Laravel lokal berbasis MySQL. Aplikasi sebelumnya menggunakan Supabase, tetapi sekarang sudah diarahkan ke Laravel API agar bisa dikembangkan dan diuji secara lokal tanpa akses Supabase.
+Frontend berjalan di Flutter Web. Backend berjalan di Laravel API dengan MySQL. Semua data penting disimpan berdasarkan `users.id`, bukan email atau provider login.
 
 ## 2. Product Goal
 
-Tujuan utama aplikasi adalah membantu customer yang belum punya arah personal branding untuk:
+Tujuan utama Zora adalah membantu customer yang belum punya arah personal branding untuk:
 
 - Mengidentifikasi kekuatan, minat, peluang, dan kebutuhan audiens.
-- Mendapat rekomendasi nama profil, kategori, dan micro niche.
-- Menyusun premise dan content pillar.
-- Membuat ide konten berdasarkan pillar.
+- Mendapat rekomendasi profile name, category, dan micro niche.
+- Menyusun premise dan content pillars.
+- Membuat ide konten berdasarkan content pillars.
 - Menghasilkan script dari ide konten.
-- Menyimpan riwayat script agar bisa dipakai ulang.
+- Menyimpan riwayat script.
+- Melanjutkan onboarding dari progress yang sudah tersimpan.
+- Menggunakan email/password atau Google sebagai metode login.
 
 ## 3. Target User
 
-### Customer
-
-Customer adalah satu-satunya aktor aplikasi. Tidak ada role admin di aplikasi ini.
+Customer adalah aktor utama aplikasi. Tidak ada role admin di aplikasi saat ini.
 
 Karakteristik customer:
 
 - Creator pemula atau profesional yang ingin membangun personal brand.
 - Membutuhkan panduan terstruktur untuk menentukan niche.
 - Ingin menghasilkan ide konten dan script dengan bantuan AI.
-- Bisa menggunakan aplikasi sebagai guest atau dengan akun email/password.
+- Dapat memakai aplikasi sebagai guest, email/password user, atau Google-linked user.
 
 ## 4. Current Platform
 
-- **Frontend:** Flutter
-- **State management:** Provider
-- **Dependency injection:** GetIt
-- **Backend:** Laravel API
-- **Database:** MySQL via Homebrew
-- **Database GUI:** phpMyAdmin
-- **Local frontend URL:** `http://127.0.0.1:3000`
-- **Local backend URL:** `http://127.0.0.1:8000/api`
-- **Local phpMyAdmin URL:** `http://127.0.0.1:8081`
+- Frontend: Flutter Web
+- State management: Provider
+- Dependency injection: GetIt
+- Backend: Laravel API
+- Database: MySQL
+- Auth: Laravel bearer token plus Google OAuth callback flow
+- AI provider: configurable backend provider with optional fallback provider
+- Local frontend URL: `http://localhost:8080`
+- Local backend URL: `http://localhost:8000/api`
+- Production frontend URL: `https://zora.coolify.depsproject.my.id`
+- Production backend URL: `https://api.zora.coolify.depsproject.my.id/api`
 
-## 5. Current Repository Structure
+## 5. High-Level Architecture
+
+```text
+Flutter Web
+  |
+  | HTTP JSON API
+  v
+Laravel API
+  |
+  | Eloquent ORM
+  v
+MySQL Database
+```
+
+Flutter tidak terhubung langsung ke MySQL. Flutter hanya memanggil Laravel API melalui `ApiClient`.
+
+## 6. Repository Structure
 
 ```text
 personal-brand-ai/
 ├── lib/
 │   ├── core/
 │   │   ├── network/api_client.dart
+│   │   ├── platform/
 │   │   ├── services/
 │   │   ├── errors/
 │   │   ├── providers/
@@ -63,49 +82,63 @@ personal-brand-ai/
 │   ├── app/Http/Controllers/Api/
 │   ├── app/Http/Middleware/
 │   ├── app/Models/
+│   ├── app/Services/
 │   ├── database/migrations/
 │   └── routes/api.php
-├── .env.example
-├── pubspec.yaml
+├── docker-compose.yml
+├── README.md
 └── PRD.md
 ```
 
-## 6. High-Level Architecture
-
-```text
-Flutter App
-  |
-  | HTTP JSON API
-  v
-Laravel API
-  |
-  | Eloquent ORM
-  v
-MySQL Database
-```
-
-Flutter tidak terhubung langsung ke MySQL. Flutter hanya memanggil Laravel API melalui `ApiClient`.
-
 ## 7. Authentication
 
-### Current Behavior
+### 7.1 Email and Password
 
-- Customer dapat register dengan email, password, dan nama lengkap.
+Functional requirements:
+
+- Customer dapat register dengan email, password, dan full name.
 - Customer dapat login dengan email dan password.
 - Customer dapat logout.
-- Untuk flow guest, Flutter membuat akun guest lokal otomatis melalui endpoint register dengan email `guest-<uuid>@local.test`.
-- Google login belum tersedia di backend Laravel lokal.
+- Sistem menampilkan pesan error jika credential salah.
+- Sistem menampilkan pesan error jika email sudah terdaftar.
+- Token dan user aktif disimpan di `shared_preferences`.
+- Saat app dibuka, Flutter memvalidasi token tersimpan ke `/api/me`.
 
-### Auth Storage
+### 7.2 Guest Usage
 
-Token dan data user disimpan melalui `shared_preferences` dan direstore saat `SplashScreen` berjalan. Flutter memvalidasi token tersimpan ke endpoint `/api/me`; jika token tidak valid, sesi lokal dihapus dan customer diarahkan kembali ke flow awal.
+Functional requirements:
+
+- Jika belum login dan endpoint protected dipanggil, Flutter dapat membuat guest session otomatis.
+- Guest account menggunakan email `guest-<uuid>@local.test`.
+- Guest dapat menjalankan onboarding dan generate konten.
+- Aplikasi dapat menampilkan reminder login pada interval penggunaan tertentu.
+
+### 7.3 Google Sign-In
+
+Google adalah metode login tambahan untuk user account yang sama, bukan identitas app yang terpisah.
+
+Functional requirements:
+
+- Customer dapat login/register dengan Google dari auth screen.
+- Customer email/password dengan email Google yang sama dapat login via Google tanpa duplicate user.
+- Customer yang sudah login dengan email berbeda dapat menghubungkan Google dari Settings.
+- Settings menampilkan status Google connection dan email Google yang terhubung.
+- Normal Google login tidak otomatis merge akun dengan email berbeda.
+- Profile name, user profile, brand profile, content ideas, dan generated scripts tetap terkait ke `users.id`.
+
+Google OAuth behavior:
+
+1. Flutter membuka backend route `/auth/google/redirect`.
+2. Google redirect ke `/api/auth/google/callback`.
+3. Backend validasi token Google, resolve user, issue API token, lalu redirect ke frontend.
+4. Flutter membaca callback token, restore session melalui `/api/me`, lalu masuk ke flow dashboard/onboarding yang sama.
 
 ## 8. Core User Flow
 
 ### 8.1 Initial Flow
 
 1. Customer membuka aplikasi.
-2. Splash screen muncul.
+2. Splash screen memeriksa session atau OAuth callback.
 3. Jika belum ada sesi, customer diarahkan ke pemilihan bahasa.
 4. Customer memilih bahasa.
 5. Customer masuk ke welcome screen.
@@ -114,40 +147,46 @@ Token dan data user disimpan melalui `shared_preferences` dan direstore saat `Sp
 ### 8.2 Onboarding Flow
 
 1. Customer mengisi nama.
-2. Customer upload foto profil.
+2. Customer upload foto profil lokal.
 3. Customer mengisi identity finder:
-   - What I love
-   - What I'm good at
-   - What the world needs
-   - What I can be paid for
-4. Sistem generate rekomendasi:
-   - Profile names
-   - Categories
-   - Micro niches
-5. Customer memilih:
-   - Profile name
-   - Category
-   - Micro niche
-6. Customer mengisi SWOT:
-   - Strengths
-   - Weaknesses
-   - Opportunities
-   - Threats
-7. Sistem generate premise options.
-8. Customer memilih premise.
-9. Customer mengisi target audience dan tone of voice.
-10. Sistem generate content pillars.
-11. Customer masuk ke dashboard.
+   - what I love
+   - what I am good at
+   - what the world needs
+   - what I can be paid for
+4. Sistem menyimpan user profile.
+5. Sistem generate rekomendasi AI:
+   - profile names
+   - categories
+   - micro niches
+   - monetization options
+6. Customer memilih:
+   - profile name
+   - category
+   - micro niche
+7. Customer mengisi SWOT.
+8. Sistem generate premise options.
+9. Customer memilih premise.
+10. Customer mengisi target audience dan tone of voice.
+11. Sistem generate content pillars.
+12. Customer menerima content pillars.
+13. Customer masuk ke dashboard.
 
-### 8.3 Content Creation Flow
+### 8.3 Dashboard Flow
 
-1. Customer membuka dashboard.
-2. Customer memilih content pillar.
-3. Customer memilih jumlah ide konten.
-4. Sistem generate ide konten.
+- Home menampilkan ringkasan strategy dan akses cepat.
+- Strategy menampilkan brand profile, Ikigai, SWOT, premise, monetization suggestions, dan content pillars.
+- Content/history menampilkan generated scripts dan content workflow.
+- Settings menampilkan account info, language, Google connection, support links, dan logout.
+
+### 8.4 Content Creation Flow
+
+1. Customer memilih content pillar.
+2. Customer memilih jumlah ide konten.
+3. Sistem generate ide konten.
+4. Ide yang berhasil diparse disimpan ke backend.
 5. Customer membuka detail ide.
-6. Customer generate script dari ide.
-7. Script tersimpan ke riwayat.
+6. Customer generate script.
+7. Script tersimpan ke history.
 8. Customer dapat membuka detail script.
 9. Customer dapat menghapus script.
 
@@ -155,115 +194,66 @@ Token dan data user disimpan melalui `shared_preferences` dan direstore saat `Sp
 
 ### 9.1 Language Selection
 
-Customer dapat memilih bahasa aplikasi.
+- Aplikasi menampilkan Bahasa Indonesia dan English.
+- Pilihan bahasa memengaruhi localizations.
+- Bahasa digunakan saat request AI melalui `languageCode`.
 
-Functional requirements:
-
-- Aplikasi menampilkan pilihan Bahasa Indonesia dan English.
-- Pilihan bahasa memengaruhi localizations aplikasi.
-- Bahasa digunakan saat request AI melalui parameter `languageCode`.
-
-### 9.2 Authentication
-
-Functional requirements:
-
-- Customer dapat membuat akun.
-- Customer dapat login.
-- Customer dapat logout.
-- Sistem menampilkan pesan error jika credential salah.
-- Sistem menampilkan pesan error jika email sudah terdaftar.
-- Google login menampilkan pesan belum tersedia pada backend lokal.
-
-### 9.3 Guest Usage
-
-Functional requirements:
-
-- Jika belum login, sistem dapat membuat sesi guest otomatis.
-- Guest dapat menjalankan onboarding dan generate konten.
-- Aplikasi menampilkan reminder login setiap interval penggunaan tertentu.
-
-Current note:
-
-- `ContentCreationProvider` menggunakan `reminderInterval = 5`.
-
-### 9.4 Profile Setup
-
-Functional requirements:
+### 9.2 Profile Setup
 
 - Customer mengisi nama lengkap.
-- Customer upload foto profil.
-- Sistem menyimpan nama ke user profile.
-- Foto profil saat ini hanya dikelola di state aplikasi, belum terlihat sebagai upload backend permanen.
+- Customer dapat memilih foto profil.
+- Nama disimpan ke user profile.
+- Foto profil saat ini dikelola di state aplikasi dan belum menjadi upload backend permanen.
 
-### 9.5 Identity Finder
-
-Functional requirements:
+### 9.3 Identity Finder
 
 - Customer mengisi empat field personal discovery.
-- Sistem menyimpan user profile.
-- Sistem memanggil AI service untuk generate rekomendasi.
-- Sistem menampilkan profile names, categories, dan micro niches.
-- Customer memilih hasil rekomendasi untuk membentuk brand profile.
+- `what_i_can_be_paid_for` boleh kosong atau berisi jawaban lemah seperti "idk".
+- Sistem tetap dapat meminta AI menyimpulkan monetization options dari konteks Ikigai lain.
+- Jawaban user asli tetap dipertahankan.
+- AI monetization suggestions disimpan terpisah di brand profile.
 
-### 9.6 SWOT and Premise
+### 9.4 Onboarding Persistence
 
-Functional requirements:
+- Progress onboarding disimpan step by step.
+- Accepted user choices disimpan ke backend.
+- AI suggestions bersifat temporary sampai diterima/dipilih user.
+- Aplikasi membedakan onboarding not started, in progress, dan completed.
+- Dashboard tidak boleh dianggap complete hanya karena sebagian profile terisi.
 
-- Customer mengisi strengths, weaknesses, opportunities, threats.
-- Sistem memanggil AI service untuk membuat premise options.
-- Customer memilih satu premise.
-- Premise disimpan di brand profile.
+### 9.5 AI Generation
 
-### 9.7 Tone of Voice and Content Pillars
+- Backend menerima request Flutter di `/process-ai`.
+- Backend memilih provider utama dari env.
+- Backend dapat fallback ke provider kedua ketika provider utama gagal karena quota, rate limit, timeout, atau service unavailable.
+- Backend mencatat metadata source/provider/model untuk onboarding answers.
+- Supported actions:
+  - `generate_identity`
+  - `generate_premise`
+  - `generate_pillars`
+  - `generate_ideas`
+  - `generate_script`
 
-Functional requirements:
+### 9.6 Content Ideas and Scripts
 
-- Customer mengisi target audience.
-- Customer memilih tone of voice.
-- Sistem memanggil AI service untuk generate content pillars.
-- Content pillars disimpan di brand profile.
-- Customer diarahkan ke dashboard setelah content pillars selesai.
-
-### 9.8 Dashboard
-
-Functional requirements:
-
-- Dashboard memiliki tab utama untuk home, strategy, dan content/history.
-- Home menampilkan ringkasan dan akses cepat generate ide.
-- Strategy menampilkan brand strategy dan content pillars.
-- Content menampilkan riwayat generated scripts.
-- Settings menampilkan informasi akun, pilihan bahasa, dan logout.
-
-### 9.9 Generate Content Ideas
-
-Functional requirements:
-
-- Customer memilih content pillar dari dropdown.
-- Customer memilih jumlah ide melalui slider.
-- Sistem memanggil AI service dengan payload brand profile.
-- Sistem menampilkan raw response dan parsed ideas.
-- Ide yang berhasil diparse disimpan ke backend melalui endpoint content ideas.
-- Jika penyimpanan ide gagal tetapi generate berhasil, ide tetap ditampilkan.
-
-### 9.10 Generate Script
-
-Functional requirements:
-
-- Customer membuka detail ide konten.
-- Customer menekan generate script.
-- Sistem memanggil AI service dengan data ide, platform, dan brand profile.
-- Script yang berhasil dibuat disimpan ke backend.
-- Script masuk ke daftar riwayat.
-- Customer dapat membuka detail script.
-- Customer dapat menghapus script.
-- Jika delete gagal, UI melakukan rollback script ke daftar.
+- Customer dapat generate ide konten berdasarkan brand profile dan content pillar.
+- Parsed content ideas disimpan user-scoped.
+- Customer dapat generate script dari satu idea.
+- Generated scripts disimpan user-scoped.
+- Delete script harus rollback di UI jika API gagal.
 
 ## 10. API Requirements
 
 Base URL lokal:
 
 ```text
-http://127.0.0.1:8000/api
+http://localhost:8000/api
+```
+
+Base URL produksi:
+
+```text
+https://api.zora.coolify.depsproject.my.id/api
 ```
 
 ### Public Endpoints
@@ -273,6 +263,8 @@ http://127.0.0.1:8000/api
 | GET | `/health` | Cek status API |
 | POST | `/register` | Register customer |
 | POST | `/login` | Login customer |
+| GET | `/auth/google/redirect` | Mulai Google OAuth login |
+| GET | `/auth/google/callback` | Callback Google OAuth |
 
 ### Protected Endpoints
 
@@ -282,11 +274,15 @@ Protected endpoint membutuhkan token Bearer.
 | --- | --- | --- |
 | GET | `/me` | Ambil user aktif |
 | POST | `/logout` | Logout user |
+| GET | `/auth/google/status` | Ambil status dan email Google connected |
+| POST | `/auth/google/link` | Mulai explicit Google account linking |
 | GET | `/user-profile` | Ambil user profile |
 | PUT | `/user-profile` | Simpan user profile |
 | GET | `/brand-profile` | Ambil brand profile |
 | PUT | `/brand-profile` | Simpan brand profile |
-| POST | `/process-ai` | Proses AI/stub |
+| GET | `/onboarding-progress` | Ambil progress onboarding |
+| POST | `/onboarding-answers` | Simpan accepted onboarding answer |
+| POST | `/process-ai` | Proses AI generation |
 | POST | `/content-ideas` | Simpan ide konten |
 | GET | `/generated-scripts` | Ambil riwayat script |
 | POST | `/generated-scripts` | Simpan generated script |
@@ -296,17 +292,37 @@ Protected endpoint membutuhkan token Bearer.
 
 ### users
 
-Purpose: menyimpan akun customer.
+Purpose: menyimpan akun customer utama.
 
 Key fields:
 
 - `id`
 - `name`
 - `email`
+- `email_verified_at`
 - `password`
 - `api_token`
 - `created_at`
 - `updated_at`
+
+### social_accounts
+
+Purpose: menyimpan metode login OAuth seperti Google.
+
+Key fields:
+
+- `id`
+- `user_id`
+- `provider`
+- `provider_user_id`
+- `provider_email`
+- `created_at`
+- `updated_at`
+
+Constraints:
+
+- unique `provider + provider_user_id`
+- unique `user_id + provider`
 
 ### user_profiles
 
@@ -326,7 +342,7 @@ Key fields:
 
 ### brand_profiles
 
-Purpose: menyimpan hasil positioning personal brand.
+Purpose: menyimpan hasil positioning personal brand dan AI suggestions yang diterima.
 
 Key fields:
 
@@ -342,9 +358,30 @@ Key fields:
 - `weaknesses`
 - `opportunities`
 - `threats`
+- `monetization_options`
 - `content_pillars`
 - `created_at`
 - `updated_at`
+
+### onboarding_answers
+
+Purpose: menyimpan accepted onboarding answer per step beserta metadata AI.
+
+Key fields:
+
+- `id`
+- `user_id`
+- `onboarding_step`
+- `selected_answer`
+- `source`
+- `model_provider`
+- `model_name`
+- `created_at`
+- `updated_at`
+
+Constraint:
+
+- unique `user_id + onboarding_step`
 
 ### content_ideas
 
@@ -380,168 +417,149 @@ Key fields:
 - `created_at`
 - `updated_at`
 
-## 12. AI Service
-
-Flutter menggunakan `GeminiService`, tetapi implementasi sekarang memanggil Laravel endpoint `/process-ai`.
-
-Laravel `AiController` saat ini masih berupa local stub untuk testing tanpa Supabase. Endpoint mengembalikan mock result untuk action:
-
-- `generate_identity`
-- `generate_premise`
-- `generate_pillars`
-- `generate_ideas`
-- `generate_script`
-
-Future requirement:
-
-- Ganti stub di `AiController` dengan provider AI asli, misalnya Gemini atau OpenAI.
-- Simpan API key di `.env` backend, bukan di Flutter.
-- Tambahkan error handling untuk rate limit, timeout, dan invalid response.
-
-## 13. Environment and Setup
+## 12. Environment and Setup
 
 ### Root Flutter `.env`
 
-File lokal root `.env` tidak dikomit. Gunakan `.env.example` sebagai template.
+File lokal root `.env` tidak dikomit. Gunakan `.env.example`.
+
+Local Docker default:
 
 ```env
-API_BASE_URL=http://127.0.0.1:8000/api
+API_BASE_URL=http://localhost:8000/api
+```
+
+Production:
+
+```env
+API_BASE_URL=https://api.zora.coolify.depsproject.my.id/api
 ```
 
 ### Laravel `.env`
 
 File lokal `laravel-backend/.env` tidak dikomit. Gunakan `laravel-backend/.env.example`.
 
-Expected local database:
+Important backend env:
 
 ```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=personal_branding_app
-DB_USERNAME=root
-DB_PASSWORD=
+APP_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:8080
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+AI_PROVIDER=gemini
+AI_MODEL=gemini-2.5-flash
+AI_FALLBACK_PROVIDER=openrouter
+AI_FALLBACK_MODEL=
+OPENROUTER_API_KEY=
+GEMINI_API_KEY=
 ```
 
-## 14. Local Runbook
+Production env lives in Coolify.
 
-### Start MySQL
+## 13. Local Runbook
 
-```bash
-brew services start mysql
-```
-
-Check MySQL:
+### Docker
 
 ```bash
-mysqladmin -uroot ping
-mysql -uroot -e "SHOW DATABASES LIKE 'personal_branding_app';"
-```
-
-### Start Laravel API
-
-```bash
-cd /Users/devlenandyanto/Documents/Coding/Skripsi/personal-brand-ai/laravel-backend
-php artisan serve --host=127.0.0.1 --port=8000
-```
-
-Check API:
-
-```bash
-curl http://127.0.0.1:8000/api/health
-```
-
-### Start Flutter Web
-
-```bash
-cd /Users/devlenandyanto/Documents/Coding/Skripsi/personal-brand-ai
-flutter run -d chrome --web-hostname 127.0.0.1 --web-port 3000
-```
-
-### Start phpMyAdmin
-
-```bash
-php -S 127.0.0.1:8081 -t /opt/homebrew/share/phpmyadmin
+docker compose up --build
 ```
 
 Open:
 
 ```text
-http://127.0.0.1:8081
+http://localhost:8080
 ```
 
-phpMyAdmin is configured for local config auth.
-
-## 15. Stop Local Services
-
-Stop MySQL:
+Backend health:
 
 ```bash
-brew services stop mysql
+curl http://localhost:8000/api/health
 ```
 
-Stop Laravel, Flutter, or phpMyAdmin:
-
-Press `Ctrl + C` or `q` in the terminal running the service.
-
-If started by Codex/tool sessions, check ports:
+### Manual Laravel
 
 ```bash
-lsof -nP -iTCP:3000 -sTCP:LISTEN
-lsof -nP -iTCP:8000 -sTCP:LISTEN
-lsof -nP -iTCP:8081 -sTCP:LISTEN
+cd laravel-backend
+php artisan migrate
+php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-Then stop by PID:
+### Manual Flutter Web
 
 ```bash
-kill <PID>
+flutter run -d chrome --web-hostname localhost --web-port 8080
 ```
 
-## 16. Non-Goals for Current Version
+## 14. Production Deployment
 
-Current version does not include:
+Production uses Coolify and deploys from the `production` branch.
+
+Production env values must be set in Coolify, not committed:
+
+```env
+API_BASE_URL=https://api.zora.coolify.depsproject.my.id/api
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.zora.coolify.depsproject.my.id
+FRONTEND_URL=https://zora.coolify.depsproject.my.id
+CORS_ALLOWED_ORIGINS=https://zora.coolify.depsproject.my.id
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
+
+Google Console production config:
+
+```text
+Authorized JavaScript origins:
+https://zora.coolify.depsproject.my.id
+
+Authorized redirect URIs:
+https://api.zora.coolify.depsproject.my.id/api/auth/google/callback
+```
+
+Run migrations through normal deployment/startup:
+
+```bash
+php artisan migrate --force
+```
+
+## 15. Non-Goals for Current Version
 
 - Admin dashboard.
 - Admin account/role.
-- Production deployment.
-- Real AI provider integration.
-- Persistent token storage.
+- Permanent backend profile photo upload.
 - Password reset.
-- Email verification.
-- Permanent profile photo upload.
+- Email verification flow.
 - Payment/subscription.
 - Social media publishing integration.
+- Full production-grade auth hardening such as OAuth token revocation UI or multi-device session management.
 
-## 17. Known Limitations
+## 16. Known Limitations
 
-- `/api/process-ai` is still a mock/stub endpoint.
-- Guest accounts are stored as generated local users.
-- Google login is disabled for the Laravel local backend.
 - Profile image is not persisted to backend storage.
-- Some Flutter analyzer warnings are still present, mostly existing lint/deprecation items.
-- Laravel API token implementation is simple and suitable for local testing, not final production security.
+- API token auth is intentionally simple.
+- Google account disconnect is not implemented yet.
+- Connected Google status shows current linked email but does not support changing provider without backend unlink support.
+- CORS is permissive on `main`; production branch keeps stricter Coolify configuration.
 
-## 18. Suggested Next Improvements
+## 17. Suggested Next Improvements
 
-1. Replace local AI stub with real AI integration.
-2. Add production-grade auth using Laravel Sanctum or Passport.
-3. Add backend storage for profile image upload.
-4. Improve guest-to-registered account conversion.
-5. Add validation and UI states for empty/error AI responses.
-6. Add more automated feature tests for Laravel endpoints.
-7. Add Flutter widget/integration tests for onboarding and content generation.
-9. Create deployment plan for backend and database.
-10. Add PRD-linked black-box testing spreadsheet as QA artifact.
+1. Add backend storage for profile image upload.
+2. Add Google disconnect/change-account flow with safety checks.
+3. Improve guest-to-registered account conversion.
+4. Add password reset and email verification.
+5. Add production observability for AI provider errors and OAuth errors.
+6. Add more Flutter integration tests for Google callback and onboarding resume.
+7. Add admin-free export/report feature for generated strategy output.
 
-## 19. Important Files for Context
+## 18. Important Files
 
 Frontend:
 
 - `lib/main.dart`
 - `lib/core/network/api_client.dart`
+- `lib/core/platform/browser_redirect.dart`
 - `lib/core/di/service_locator.dart`
-- `lib/core/services/gemini_service.dart`
 - `lib/features/auth/`
 - `lib/features/onboarding/`
 - `lib/features/content_creation/`
@@ -554,18 +572,19 @@ Backend:
 - `laravel-backend/app/Http/Controllers/Api/ProfileController.php`
 - `laravel-backend/app/Http/Controllers/Api/ContentController.php`
 - `laravel-backend/app/Http/Controllers/Api/AiController.php`
+- `laravel-backend/app/Services/Auth/GoogleOAuthService.php`
+- `laravel-backend/app/Services/Ai/`
 - `laravel-backend/app/Http/Middleware/ApiTokenAuth.php`
-- `laravel-backend/database/migrations/2026_05_03_000001_create_personal_branding_tables.php`
+- `laravel-backend/database/migrations/`
 
 Docs:
 
-- `laravel-backend/LOCAL_SETUP.md`
+- `README.md`
 - `PRD.md`
+- `laravel-backend/LOCAL_SETUP.md`
 
-## 20. Prompt Context for ChatGPT Browser
-
-Use this summary when asking ChatGPT in browser:
+## 19. Prompt Context
 
 ```text
-I am building Personal Branding Zora, a Flutter app with a Laravel + MySQL backend. The app helps a customer complete personal branding onboarding, generate identity suggestions, choose a niche, fill SWOT, generate premise, generate content pillars, create content ideas, and generate scripts. There is no admin role. The current Laravel backend is local and has API token auth, profile endpoints, brand profile endpoints, content idea endpoints, generated script endpoints, and a mock /api/process-ai endpoint. Flutter calls Laravel through lib/core/network/api_client.dart. The local API URL is http://127.0.0.1:8000/api. MySQL database is personal_branding_app. Please use this PRD as the source of truth.
+I am building Zora Personal Branding AI, a Flutter Web app with a Laravel + MySQL backend. The app helps a customer complete personal branding onboarding, generate identity suggestions, choose a niche, fill SWOT, generate a premise, generate content pillars, create content ideas, and generate scripts. There is no admin role. The backend has API token auth, Google OAuth login/linking through social_accounts, profile endpoints, brand profile endpoints, onboarding progress endpoints, AI generation endpoints with provider/fallback support, content idea endpoints, and generated script endpoints. Flutter calls Laravel through lib/core/network/api_client.dart. The local API URL is http://localhost:8000/api and production API URL is https://api.zora.coolify.depsproject.my.id/api. Please use PRD.md as the source of truth.
 ```
