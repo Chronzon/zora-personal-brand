@@ -224,6 +224,30 @@ abstract class AppLocalizations {
   /// **'Log Out'**
   String get logOut;
 
+  /// No description provided for @logoutConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out?'**
+  String get logoutConfirmTitle;
+
+  /// No description provided for @logoutConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to log out of this account?'**
+  String get logoutConfirmBody;
+
+  /// No description provided for @logoutConfirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get logoutConfirmCancel;
+
+  /// No description provided for @logoutConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get logoutConfirmAction;
+
   /// No description provided for @madeWithLove.
   ///
   /// In en, this message translates to:
@@ -878,6 +902,12 @@ abstract class AppLocalizations {
   /// **'Script History'**
   String get contentScriptHistory;
 
+  /// No description provided for @contentHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review generated scripts and open the ones you want to reuse.'**
+  String get contentHistorySubtitle;
+
   /// No description provided for @contentEmptyTitle.
   ///
   /// In en, this message translates to:
@@ -889,6 +919,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generate ideas first, then create scripts.'**
   String get contentEmptyBody;
+
+  /// No description provided for @createIdeaSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to create?'**
+  String get createIdeaSheetTitle;
+
+  /// No description provided for @createIdeaPillarLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Content Pillar'**
+  String get createIdeaPillarLabel;
+
+  /// No description provided for @createIdeaCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Idea Count'**
+  String get createIdeaCountLabel;
+
+  /// No description provided for @createIdeaCountValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ideas'**
+  String createIdeaCountValue(int count);
+
+  /// No description provided for @createIdeaMissingPillar.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose a content pillar.'**
+  String get createIdeaMissingPillar;
+
+  /// No description provided for @createIdeaLoadingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Crafting Ideas...'**
+  String get createIdeaLoadingLabel;
+
+  /// No description provided for @createIdeaGenerateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Ideas'**
+  String get createIdeaGenerateButton;
 
   /// No description provided for @strategyTitle.
   ///

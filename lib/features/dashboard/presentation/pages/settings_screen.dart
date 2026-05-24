@@ -107,6 +107,48 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmSignOut({
+    required BuildContext context,
+    required AppLocalizations l10n,
+    required AuthProvider authProvider,
+  }) async {
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.logoutConfirmTitle),
+          content: Text(l10n.logoutConfirmBody),
+          actions: [
+            TextButton(
+              autofocus: true,
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.logoutConfirmCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red.shade600,
+              ),
+              child: Text(l10n.logoutConfirmAction),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSignOut != true || !context.mounted) {
+      return;
+    }
+
+    await authProvider.signOut();
+    if (context.mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const SplashScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   Widget _buildLanguageOption({
     required BuildContext context,
     required String label,
@@ -681,15 +723,11 @@ class SettingsScreen extends StatelessWidget {
         iconColor: Colors.red.shade600,
         titleColor: Colors.red.shade600,
         trailing: _buildChevron(color: Colors.red.shade300),
-        onTap: () async {
-          await authProvider.signOut();
-          if (context.mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const SplashScreen()),
-              (route) => false,
-            );
-          }
-        },
+        onTap: () => _confirmSignOut(
+          context: context,
+          l10n: l10n,
+          authProvider: authProvider,
+        ),
       ),
     );
   }

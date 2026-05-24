@@ -20,6 +20,10 @@
   "aboutApp": "About App",
   "actionsSection": "Actions",
   "logOut": "Log Out",
+  "logoutConfirmTitle": "Log out?",
+  "logoutConfirmBody": "Are you sure you want to log out of this account?",
+  "logoutConfirmCancel": "Cancel",
+  "logoutConfirmAction": "Log Out",
   "madeWithLove": "Made with ❤️ for Skripsi",
   "selectLanguage": "Select Language",
   "dashboardHome": "Home",
@@ -153,8 +157,24 @@
   "hookTemplateSix": "The tool I use to make this easier...",
   "contentGenerateNew": "Generate New",
   "contentScriptHistory": "Script History",
+  "contentHistorySubtitle": "Review generated scripts and open the ones you want to reuse.",
   "contentEmptyTitle": "No Scripts Generated Yet",
   "contentEmptyBody": "Generate ideas first, then create scripts.",
+  "createIdeaSheetTitle": "What do you want to create?",
+  "createIdeaPillarLabel": "Content Pillar",
+  "createIdeaCountLabel": "Idea Count",
+  "createIdeaCountValue": "{count} ideas",
+  "@createIdeaCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "createIdeaMissingPillar": "Please choose a content pillar.",
+  "createIdeaLoadingLabel": "Crafting Ideas...",
+  "createIdeaGenerateButton": "Generate Ideas",
   "strategyTitle": "Brand Strategy",
   "strategySubtitle": "Review your positioning, Ikigai, SWOT, and content pillars in one place.",
   "strategyIncompleteTitle": "Your brand strategy is not complete yet.",

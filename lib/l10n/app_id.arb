@@ -20,6 +20,10 @@
   "aboutApp": "Tentang Aplikasi",
   "actionsSection": "Tindakan",
   "logOut": "Keluar",
+  "logoutConfirmTitle": "Keluar?",
+  "logoutConfirmBody": "Apakah Anda yakin ingin keluar dari akun ini?",
+  "logoutConfirmCancel": "Batal",
+  "logoutConfirmAction": "Keluar",
   "madeWithLove": "Dibuat dengan ❤️ untuk Skripsi",
   "selectLanguage": "Pilih Bahasa",
   "dashboardHome": "Beranda",
@@ -153,8 +157,24 @@
   "hookTemplateSix": "Alat yang saya gunakan untuk membuat ini lebih mudah...",
   "contentGenerateNew": "Buat Baru",
   "contentScriptHistory": "Riwayat Script",
+  "contentHistorySubtitle": "Tinjau script yang sudah dibuat dan buka yang ingin digunakan lagi.",
   "contentEmptyTitle": "Belum Ada Script",
   "contentEmptyBody": "Buat ide terlebih dahulu, lalu buat script.",
+  "createIdeaSheetTitle": "Apa yang ingin kamu buat?",
+  "createIdeaPillarLabel": "Pilih Pilar Konten",
+  "createIdeaCountLabel": "Jumlah Ide",
+  "createIdeaCountValue": "{count} ide",
+  "@createIdeaCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "createIdeaMissingPillar": "Harap pilih pilar konten.",
+  "createIdeaLoadingLabel": "Meracik Ide...",
+  "createIdeaGenerateButton": "Buat Ide",
   "strategyTitle": "Strategi Brand",
   "strategySubtitle": "Tinjau positioning, Ikigai, SWOT, dan content pillar Anda dalam satu tempat.",
   "strategyIncompleteTitle": "Strategi brand Anda belum lengkap.",

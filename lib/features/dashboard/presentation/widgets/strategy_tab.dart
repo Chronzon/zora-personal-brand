@@ -30,9 +30,11 @@ class StrategyTab extends StatelessWidget {
         elevation: 0,
         surfaceTintColor: Colors.white,
       ),
-      body: onboardingProvider.isOnboardingComplete
-          ? _buildStrategyBody(context, onboardingProvider, l10n)
-          : _buildIncompleteState(context, l10n),
+      body: _DashboardBackground(
+        child: onboardingProvider.isOnboardingComplete
+            ? _buildStrategyBody(context, onboardingProvider, l10n)
+            : _buildIncompleteState(context, l10n),
+      ),
     );
   }
 
@@ -467,6 +469,31 @@ class _Panel extends StatelessWidget {
             offset: const Offset(0, 8),
           ),
         ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _DashboardBackground extends StatelessWidget {
+  const _DashboardBackground({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF1EAFF),
+            StrategyTab._backgroundColor,
+            Colors.white,
+          ],
+          stops: [0, 0.42, 1],
+        ),
       ),
       child: child,
     );
