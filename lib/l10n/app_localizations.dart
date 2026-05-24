@@ -224,6 +224,30 @@ abstract class AppLocalizations {
   /// **'Log Out'**
   String get logOut;
 
+  /// No description provided for @logoutConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out?'**
+  String get logoutConfirmTitle;
+
+  /// No description provided for @logoutConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to log out of this account?'**
+  String get logoutConfirmBody;
+
+  /// No description provided for @logoutConfirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get logoutConfirmCancel;
+
+  /// No description provided for @logoutConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get logoutConfirmAction;
+
   /// No description provided for @madeWithLove.
   ///
   /// In en, this message translates to:
@@ -890,17 +914,53 @@ abstract class AppLocalizations {
   /// **'Generate ideas first, then create scripts.'**
   String get contentEmptyBody;
 
+  /// No description provided for @createIdeaSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to create?'**
+  String get createIdeaSheetTitle;
+
+  /// No description provided for @createIdeaPillarLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Content Pillar'**
+  String get createIdeaPillarLabel;
+
+  /// No description provided for @createIdeaCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Idea Count'**
+  String get createIdeaCountLabel;
+
+  /// No description provided for @createIdeaCountValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ideas'**
+  String createIdeaCountValue(int count);
+
+  /// No description provided for @createIdeaMissingPillar.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose a content pillar.'**
+  String get createIdeaMissingPillar;
+
+  /// No description provided for @createIdeaLoadingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Crafting Ideas...'**
+  String get createIdeaLoadingLabel;
+
+  /// No description provided for @createIdeaGenerateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Ideas'**
+  String get createIdeaGenerateButton;
+
   /// No description provided for @strategyTitle.
   ///
   /// In en, this message translates to:
   /// **'Brand Strategy'**
   String get strategyTitle;
-
-  /// No description provided for @strategySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Review your positioning, Ikigai, SWOT, and content pillars in one place.'**
-  String get strategySubtitle;
 
   /// No description provided for @strategyIncompleteTitle.
   ///
@@ -955,6 +1015,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Monetization'**
   String get monetizationTitle;
+
+  /// No description provided for @monetizationYourAnswerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your answer'**
+  String get monetizationYourAnswerLabel;
+
+  /// No description provided for @monetizationAiSuggestionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AI suggestions'**
+  String get monetizationAiSuggestionsLabel;
 
   /// No description provided for @ikigaiAnswersTitle.
   ///

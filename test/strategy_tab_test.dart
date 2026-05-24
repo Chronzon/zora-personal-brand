@@ -40,6 +40,17 @@ class FakeStrategyRepository implements IOnboardingRepository {
   }
 
   @override
+  Future<Result<void, Failure>> saveOnboardingAnswer({
+    required String onboardingStep,
+    required Map<String, dynamic> selectedAnswer,
+    required String source,
+    String? modelProvider,
+    String? modelName,
+  }) async {
+    return const Success(null);
+  }
+
+  @override
   Future<Result<Map<String, dynamic>, Failure>> generateIdentity(
     UserProfile profile,
     String languageCode,
@@ -100,6 +111,7 @@ void main() {
           weaknesses: 'Inconsistent posting',
           opportunities: opportunities,
           threats: 'Crowded niche',
+          monetizationOptions: const ['Paid workshops', 'Content audits'],
           contentPillars: const ['Education', 'Case studies'],
         ),
       ),
@@ -122,6 +134,63 @@ void main() {
     expect(find.text('Opportunities'), findsOneWidget);
     expect(find.text(opportunities), findsOneWidget);
     expect(find.text('What I Can Be Paid For'), findsWidgets);
+    expect(find.text('Your answer'), findsOneWidget);
+    expect(find.text('AI suggestions'), findsOneWidget);
     expect(find.text(indonesianMonetization), findsWidgets);
+    expect(find.text('Paid workshops'), findsOneWidget);
+    expect(find.text('Content audits'), findsOneWidget);
+  });
+
+  testWidgets('monetization card shows blank user answer separately',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final provider = OnboardingProvider(
+      FakeStrategyRepository(
+        userProfile: UserProfile(
+          fullName: 'Alya Creator',
+          whatILove: 'Teaching practical AI',
+          whatImGoodAt: 'Turning strategy into simple content systems',
+          whatTheWorldNeeds: 'Clearer AI workflows for founders',
+        ),
+        brandProfile: BrandProfile(
+          selectedProfileName: 'Alya AI Studio',
+          selectedCategory: 'Education',
+          selectedMicroNiche: 'AI content workflows',
+          selectedPremise: 'Practical AI for small teams',
+          toneOfVoice: 'Educational & Informative',
+          targetAudience: 'Solo founders',
+          strengths: 'Clear teaching style',
+          weaknesses: 'Inconsistent posting',
+          opportunities: 'Local founders need simple AI content workflows',
+          threats: 'Crowded niche',
+          monetizationOptions: const ['Founder AI clinics', 'Workflow audits'],
+          contentPillars: const ['Education', 'Case studies'],
+        ),
+      ),
+    );
+
+    await provider.loadUserData();
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: provider,
+        child: const MaterialApp(
+          locale: Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: StrategyTab(),
+        ),
+      ),
+    );
+
+    expect(find.text('Your answer'), findsOneWidget);
+    expect(find.text('Not set yet'), findsWidgets);
+    expect(find.text('AI suggestions'), findsOneWidget);
+    expect(find.text('Founder AI clinics'), findsOneWidget);
+    expect(find.text('Workflow audits'), findsOneWidget);
   });
 }

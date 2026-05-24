@@ -84,16 +84,53 @@ class ApiFeatureTest extends TestCase
                 'weaknesses' => 'Overthinking',
                 'opportunities' => 'Creator economy growth',
                 'threats' => 'Generic advice',
+                'monetization_options' => ['Paid workshops', 'Content audits'],
                 'content_pillars' => ['Story', 'Tutorial', 'Q&A'],
             ])
             ->assertOk()
+            ->assertJsonPath('data.monetization_options.0', 'Paid workshops')
             ->assertJsonPath('data.content_pillars.0', 'Story');
 
         $this->withToken($token)
             ->getJson('/api/brand-profile')
             ->assertOk()
             ->assertJsonPath('data.selected_profile_name', 'Creator Strategy Lab')
+            ->assertJsonPath('data.monetization_options.1', 'Content audits')
             ->assertJsonPath('data.content_pillars.2', 'Q&A');
+    }
+
+    public function test_onboarding_answer_saves_progress_and_updates_brand_profile(): void
+    {
+        $token = $this->registerToken('onboarding-answer@example.test');
+
+        $this->withToken($token)
+            ->postJson('/api/onboarding-answers', [
+                'onboarding_step' => 'profile_name',
+                'selected_answer' => [
+                    'selected_profile_name' => 'Creator Strategy Lab',
+                    'monetization_options' => ['Paid workshops'],
+                ],
+                'source' => 'fallback_ai',
+                'model_provider' => 'openrouter',
+                'model_name' => 'openai/gpt-oss-test',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.onboarding_step', 'profile_name')
+            ->assertJsonPath('data.source', 'fallback_ai');
+
+        $this->assertDatabaseHas('onboarding_answers', [
+            'onboarding_step' => 'profile_name',
+            'source' => 'fallback_ai',
+            'model_provider' => 'openrouter',
+            'model_name' => 'openai/gpt-oss-test',
+        ]);
+
+        $this->withToken($token)
+            ->getJson('/api/onboarding-progress')
+            ->assertOk()
+            ->assertJsonPath('brand_profile.selected_profile_name', 'Creator Strategy Lab')
+            ->assertJsonPath('brand_profile.monetization_options.0', 'Paid workshops')
+            ->assertJsonPath('completed_steps.0.onboarding_step', 'profile_name');
     }
 
     public function test_generated_scripts_are_user_scoped(): void
@@ -176,11 +213,13 @@ class ApiFeatureTest extends TestCase
         $this->withToken($token)
             ->putJson('/api/brand-profile', [
                 'selected_profile_name' => str_repeat('b', 256),
+                'monetization_options' => ['Valid', str_repeat('m', 256)],
                 'content_pillars' => ['Valid', str_repeat('c', 256)],
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'selected_profile_name',
+                'monetization_options.1',
                 'content_pillars.1',
             ]);
     }

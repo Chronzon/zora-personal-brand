@@ -6,10 +6,22 @@ class AuthResult {
   const AuthResult(this.user);
 }
 
+class GoogleConnection {
+  final bool connected;
+  final String? email;
+
+  const GoogleConnection({
+    required this.connected,
+    this.email,
+  });
+}
+
 abstract class AuthRepository {
   ApiUser? get currentUser;
 
   Future<bool> restoreSession();
+
+  Future<bool> completeOAuthSession(String token);
 
   Future<AuthResult> signIn({
     required String email,
@@ -25,4 +37,8 @@ abstract class AuthRepository {
   Future<void> signOut();
 
   Future<bool> signInWithGoogle();
+
+  Future<bool> connectGoogle();
+
+  Future<GoogleConnection> getGoogleConnection();
 }

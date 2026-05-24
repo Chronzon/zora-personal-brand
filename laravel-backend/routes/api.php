@@ -11,16 +11,23 @@ Route::get('/health', fn () => ['status' => 'ok']);
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/auth/google/redirect', [AuthController::class, 'googleRedirect']);
+Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
 
 Route::middleware(ApiTokenAuth::class)->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/auth/google/status', [AuthController::class, 'googleStatus']);
+    Route::post('/auth/google/link', [AuthController::class, 'googleLinkRedirect']);
 
     Route::get('/user-profile', [ProfileController::class, 'userProfile']);
     Route::put('/user-profile', [ProfileController::class, 'saveUserProfile']);
 
     Route::get('/brand-profile', [ProfileController::class, 'brandProfile']);
     Route::put('/brand-profile', [ProfileController::class, 'saveBrandProfile']);
+
+    Route::get('/onboarding-progress', [ProfileController::class, 'onboardingProgress']);
+    Route::post('/onboarding-answers', [ProfileController::class, 'saveOnboardingAnswer']);
 
     Route::post('/process-ai', [AiController::class, 'process']);
 

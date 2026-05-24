@@ -65,6 +65,28 @@ class ApiClient {
   ApiUser? get currentUser => _currentUser;
   bool get isAuthenticated => _token != null;
 
+  Future<bool> completeOAuthSession(String token) async {
+    if (token.isEmpty) return false;
+
+    _token = token;
+
+    try {
+      final response = await get('/me');
+      if (response is Map<String, dynamic> &&
+          response['user'] is Map<String, dynamic>) {
+        _currentUser = ApiUser.fromJson(response['user']);
+        await _persistSession();
+        return true;
+      }
+    } catch (_) {
+      await clearSession();
+      rethrow;
+    }
+
+    await clearSession();
+    return false;
+  }
+
   Future<bool> restoreSession() async {
     final prefs = await SharedPreferences.getInstance();
     final storedToken = prefs.getString(_tokenKey);
@@ -238,6 +260,9 @@ class ApiClient {
     if (decoded is Map<String, dynamic>) {
       final message = decoded['message'];
       if (message is String && message.isNotEmpty) return message;
+
+      final error = decoded['error'];
+      if (error is String && error.isNotEmpty) return error;
 
       final errors = decoded['errors'];
       if (errors is Map && errors.isNotEmpty) {

@@ -78,8 +78,56 @@ class PromptBuilderTest extends TestCase
         $this->assertStringContainsString('Return ONLY one valid JSON object', $prompt);
         $this->assertStringContainsString('"categories"', $prompt);
         $this->assertStringContainsString('"profile_names"', $prompt);
+        $this->assertStringContainsString('"monetization_options"', $prompt);
         $this->assertStringNotContainsString('Bahasa Indonesia', $prompt);
         $this->assertStringNotContainsString('PENTING', $prompt);
+    }
+
+    public function test_identity_prompt_requires_separate_monetization_options(): void
+    {
+        $prompt = (new PromptBuilder)->build('generate_identity', [
+            'fullName' => 'Zora',
+            'whatILove' => 'Teaching',
+            'whatImGoodAt' => 'Explaining ideas',
+            'whatTheWorldNeeds' => 'Better learning',
+            'whatICanBePaidFor' => 'Workshops',
+        ], 'en');
+
+        $this->assertStringContainsString('`monetization_options`: 5 monetization suggestions', $prompt);
+        $this->assertStringContainsString('"monetization_options"', $prompt);
+        $this->assertStringContainsString('context only', $prompt);
+        $this->assertStringContainsString('Do not rewrite it', $prompt);
+        $this->assertStringContainsString('What I Can Be Paid For (user\'s original answer, context only): Workshops', $prompt);
+    }
+
+    public function test_identity_prompt_ignores_blank_monetization_input(): void
+    {
+        $prompt = (new PromptBuilder)->build('generate_identity', [
+            'fullName' => 'Zora',
+            'whatILove' => 'Teaching',
+            'whatImGoodAt' => 'Explaining ideas',
+            'whatTheWorldNeeds' => 'Better learning',
+            'whatICanBePaidFor' => '',
+        ], 'en');
+
+        $this->assertStringContainsString('blank or weak answer', $prompt);
+        $this->assertStringContainsString('ignore this field and infer monetization', $prompt);
+        $this->assertStringNotContainsString('I am not sure yet, please help me discover possible monetization opportunities.', $prompt);
+    }
+
+    public function test_identity_prompt_ignores_weak_monetization_input(): void
+    {
+        $prompt = (new PromptBuilder)->build('generate_identity', [
+            'fullName' => 'Zora',
+            'whatILove' => 'Teaching',
+            'whatImGoodAt' => 'Explaining ideas',
+            'whatTheWorldNeeds' => 'Better learning',
+            'whatICanBePaidFor' => 'tidak tahu',
+        ], 'id');
+
+        $this->assertStringContainsString('jawaban kosong atau lemah', $prompt);
+        $this->assertStringContainsString('abaikan field ini', $prompt);
+        $this->assertStringNotContainsString('Aku masih belum tau, tolong dibantu menemukan jawaban untuk peluang monetisasinya', $prompt);
     }
 
     public function test_english_prompts_use_english_templates_for_all_actions(): void

@@ -10,6 +10,46 @@ import 'package:provider/provider.dart';
 class PillarResultScreen extends StatelessWidget {
   const PillarResultScreen({super.key});
 
+  Future<void> _finishOnboarding(BuildContext context) async {
+    final onboardingProvider = context.read<OnboardingProvider>();
+    final saved = await onboardingProvider.saveAcceptedContentPillars();
+
+    if (!context.mounted) return;
+
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            onboardingProvider.errorMessage ??
+                AppLocalizations.of(context)!.strategyGenerationFailed,
+          ),
+        ),
+      );
+      return;
+    }
+
+    final user = context.read<AuthProvider>().currentUser;
+    final isGuest = user != null && user.isAnonymous;
+
+    if (isGuest) {
+      AuthTriggerSheet.show(
+        context,
+        type: AuthTriggerType.fearOfLoss,
+        onContinueAsGuest: () {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            (route) => false,
+          );
+        },
+      );
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final onboardingProvider = context.watch<OnboardingProvider>();
@@ -69,35 +109,9 @@ class PillarResultScreen extends StatelessWidget {
                   child: SizedBox(
                     width: isMobile ? double.infinity : null,
                     child: ElevatedButton(
-                      onPressed: () {
-                        final user = context.read<AuthProvider>().currentUser;
-
-                        // Cek apakah user adalah Anonymous (Guest)
-                        final isGuest = user != null && user.isAnonymous;
-
-                        if (isGuest) {
-                          // TAMPILKAN TRIGGER A (Fear of Loss)
-                          AuthTriggerSheet.show(
-                            context,
-                            type: AuthTriggerType.fearOfLoss,
-                            onContinueAsGuest: () {
-                              // Jika user menolak login, biarkan masuk Dashboard (Risiko data hilang)
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                    builder: (_) => const DashboardScreen()),
-                                (route) => false,
-                              );
-                            },
-                          );
-                        } else {
-                          // Jika sudah Login resmi, langsung masuk
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                                builder: (_) => const DashboardScreen()),
-                            (route) => false,
-                          );
-                        }
-                      },
+                      onPressed: onboardingProvider.isLoading
+                          ? null
+                          : () => _finishOnboarding(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: purpleColor,
                         foregroundColor: Colors.white,
@@ -107,13 +121,22 @@ class PillarResultScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        l10n.goToHome,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: onboardingProvider.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              l10n.goToHome,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                 ),

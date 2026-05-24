@@ -17,14 +17,30 @@ class PremiseResultScreen extends StatefulWidget {
 class _PremiseResultScreenState extends State<PremiseResultScreen> {
   String? _selectedPremise;
 
-  void _onNext() {
+  Future<void> _onNext() async {
     if (_selectedPremise != null) {
-      context.read<OnboardingProvider>().selectedPremise = _selectedPremise;
+      final provider = context.read<OnboardingProvider>();
+      provider.selectedPremise = _selectedPremise;
+
+      final saved = await provider.saveSelectedPremise();
+      if (!mounted) return;
+
+      if (!saved) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(provider.errorMessage ?? l10nFallbackError),
+          ),
+        );
+        return;
+      }
+
       Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => const ToneOfVoiceScreen(),
       ));
     }
   }
+
+  String get l10nFallbackError => 'Failed to save your selected premise.';
 
   @override
   Widget build(BuildContext context) {
@@ -95,8 +111,10 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                           ),
                           const SizedBox(width: 16),
                           ElevatedButton(
-                            onPressed:
-                                _selectedPremise != null ? _onNext : null,
+                            onPressed: _selectedPremise != null &&
+                                    !onboardingProvider.isLoading
+                                ? () => _onNext()
+                                : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: purpleColor,
                               disabledBackgroundColor: Colors.grey.shade200,
@@ -108,14 +126,23 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(l10n.continueButton),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.arrow_forward, size: 16),
-                              ],
-                            ),
+                            child: onboardingProvider.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(l10n.continueButton),
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.arrow_forward, size: 16),
+                                    ],
+                                  ),
                           )
                         ],
                       ),
@@ -167,7 +194,10 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _selectedPremise != null ? _onNext : null,
+                          onPressed: _selectedPremise != null &&
+                                  !onboardingProvider.isLoading
+                              ? () => _onNext()
+                              : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: purpleColor,
                             disabledBackgroundColor: Colors.grey.shade200,
@@ -179,14 +209,23 @@ class _PremiseResultScreenState extends State<PremiseResultScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(l10n.continueButton),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward, size: 16),
-                            ],
-                          ),
+                          child: onboardingProvider.isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(l10n.continueButton),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.arrow_forward, size: 16),
+                                  ],
+                                ),
                         ),
                       )
                     ],

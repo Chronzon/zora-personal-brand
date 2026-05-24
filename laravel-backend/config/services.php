@@ -31,6 +31,8 @@ return [
     'ai' => [
         'provider' => env('AI_PROVIDER', 'local'),
         'model' => env('AI_MODEL'),
+        'fallback_provider' => env('AI_FALLBACK_PROVIDER'),
+        'fallback_model' => env('AI_FALLBACK_MODEL'),
     ],
 
     'openrouter' => [
@@ -39,6 +41,15 @@ return [
 
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
+    ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+    ],
+
+    'frontend' => [
+        'url' => env('FRONTEND_URL', env('APP_URL')),
     ],
 
     'slack' => [

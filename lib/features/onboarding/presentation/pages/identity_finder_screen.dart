@@ -97,7 +97,16 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
               onSelect: (value) {
                 provider.selectedProfileName = value;
               },
-              onNext: () {
+              onNext: () async {
+                if (!await provider.saveSelectedProfileName()) {
+                  if (mounted && provider.errorMessage != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(provider.errorMessage!)),
+                    );
+                  }
+                  return;
+                }
+                if (!mounted) return;
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => SelectionScreen(
                     title: l10n.categorySelectionTitle,
@@ -106,7 +115,16 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                     onSelect: (value) {
                       provider.selectedCategory = value;
                     },
-                    onNext: () {
+                    onNext: () async {
+                      if (!await provider.saveSelectedCategory()) {
+                        if (mounted && provider.errorMessage != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(provider.errorMessage!)),
+                          );
+                        }
+                        return;
+                      }
+                      if (!mounted) return;
                       Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => SelectionScreen(
                           title: l10n.microNicheSelectionTitle,
@@ -115,7 +133,17 @@ class _IdentityFinderScreenState extends State<IdentityFinderScreen> {
                           onSelect: (value) {
                             provider.selectedMicroNiche = value;
                           },
-                          onNext: () {
+                          onNext: () async {
+                            if (!await provider.saveSelectedMicroNiche()) {
+                              if (mounted && provider.errorMessage != null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(provider.errorMessage!)),
+                                );
+                              }
+                              return;
+                            }
+                            if (!mounted) return;
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (_) => const SwotScreen(),
                             ));

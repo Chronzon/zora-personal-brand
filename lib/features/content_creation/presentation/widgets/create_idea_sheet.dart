@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_branding_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_branding_app/features/auth/presentation/widgets/auth_trigger_sheet.dart';
+import 'package:personal_branding_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 import '../providers/content_creation_provider.dart';
@@ -82,6 +83,7 @@ class _CreateIdeaSheetState extends State<CreateIdeaSheet> {
   Widget build(BuildContext context) {
     final onboardingProvider = context.read<OnboardingProvider>();
     final pillars = onboardingProvider.contentPillarOptions;
+    final l10n = AppLocalizations.of(context)!;
     const purpleColor = Color(0xFF8A53FF);
 
     // Validasi pilar default
@@ -114,12 +116,12 @@ class _CreateIdeaSheetState extends State<CreateIdeaSheet> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            "Apa yang ingin kamu buat?",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Text(
+            l10n.createIdeaSheetTitle,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
-          Text("Pilih Pilar Konten",
+          Text(l10n.createIdeaPillarLabel,
               style: TextStyle(
                   color: Colors.grey.shade600,
                   fontSize: 12,
@@ -153,12 +155,12 @@ class _CreateIdeaSheetState extends State<CreateIdeaSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Jumlah Ide",
+              Text(l10n.createIdeaCountLabel,
                   style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
                       fontWeight: FontWeight.bold)),
-              Text("${_ideaCount.toInt()} Ide",
+              Text(l10n.createIdeaCountValue(_ideaCount.toInt()),
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, color: purpleColor)),
             ],
@@ -181,8 +183,7 @@ class _CreateIdeaSheetState extends State<CreateIdeaSheet> {
                   : () async {
                       if (_selectedPillar == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text("Harap pilih pilar konten.")),
+                          SnackBar(content: Text(l10n.createIdeaMissingPillar)),
                         );
                         return;
                       }
@@ -217,29 +218,29 @@ class _CreateIdeaSheetState extends State<CreateIdeaSheet> {
                 elevation: 0,
               ),
               child: _isGenerating
-                  ? const Row(
+                  ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2),
                         ),
-                        SizedBox(width: 12),
-                        Text("Meracik Ide...",
-                            style: TextStyle(
+                        const SizedBox(width: 12),
+                        Text(l10n.createIdeaLoadingLabel,
+                            style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold)),
                       ],
                     )
-                  : const Row(
+                  : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.auto_awesome, color: Colors.white),
-                        SizedBox(width: 12),
-                        Text("Generate Ideas",
-                            style: TextStyle(
+                        const Icon(Icons.auto_awesome, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Text(l10n.createIdeaGenerateButton,
+                            style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold)),

@@ -20,6 +20,10 @@
   "aboutApp": "About App",
   "actionsSection": "Actions",
   "logOut": "Log Out",
+  "logoutConfirmTitle": "Log out?",
+  "logoutConfirmBody": "Are you sure you want to log out of this account?",
+  "logoutConfirmCancel": "Cancel",
+  "logoutConfirmAction": "Log Out",
   "madeWithLove": "Made with ❤️ for Skripsi",
   "selectLanguage": "Select Language",
   "dashboardHome": "Home",
@@ -155,8 +159,22 @@
   "contentScriptHistory": "Script History",
   "contentEmptyTitle": "No Scripts Generated Yet",
   "contentEmptyBody": "Generate ideas first, then create scripts.",
+  "createIdeaSheetTitle": "What do you want to create?",
+  "createIdeaPillarLabel": "Content Pillar",
+  "createIdeaCountLabel": "Idea Count",
+  "createIdeaCountValue": "{count} ideas",
+  "@createIdeaCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "createIdeaMissingPillar": "Please choose a content pillar.",
+  "createIdeaLoadingLabel": "Crafting Ideas...",
+  "createIdeaGenerateButton": "Generate Ideas",
   "strategyTitle": "Brand Strategy",
-  "strategySubtitle": "Review your positioning, Ikigai, SWOT, and content pillars in one place.",
   "strategyIncompleteTitle": "Your brand strategy is not complete yet.",
   "strategyIncompleteBody": "Complete your setup to unlock your audience, monetization, SWOT, and content pillar strategy.",
   "profileSummaryTitle": "Profile Summary",
@@ -166,6 +184,8 @@
   "premiseLabel": "Premise",
   "toneOfVoiceLabel": "Tone of Voice",
   "monetizationTitle": "Monetization",
+  "monetizationYourAnswerLabel": "Your answer",
+  "monetizationAiSuggestionsLabel": "AI suggestions",
   "ikigaiAnswersTitle": "Ikigai Answers",
   "swotAnalysisTitle": "SWOT Analysis",
   "contentPillarsTitle": "Content Pillars",

@@ -365,11 +365,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
               if (success) {
                 await _completeAuthNavigation();
-              } else {
+              } else if (provider.errorMessage != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(
-                          provider.errorMessage ?? "Google Sign In Gagal")),
+                    content: Text(provider.errorMessage!),
+                  ),
                 );
               }
             },

@@ -72,6 +72,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logOut => 'Log Out';
 
   @override
+  String get logoutConfirmTitle => 'Log out?';
+
+  @override
+  String get logoutConfirmBody =>
+      'Are you sure you want to log out of this account?';
+
+  @override
+  String get logoutConfirmCancel => 'Cancel';
+
+  @override
+  String get logoutConfirmAction => 'Log Out';
+
+  @override
   String get madeWithLove => 'Made with ❤️ for Skripsi';
 
   @override
@@ -446,11 +459,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contentEmptyBody => 'Generate ideas first, then create scripts.';
 
   @override
-  String get strategyTitle => 'Brand Strategy';
+  String get createIdeaSheetTitle => 'What do you want to create?';
 
   @override
-  String get strategySubtitle =>
-      'Review your positioning, Ikigai, SWOT, and content pillars in one place.';
+  String get createIdeaPillarLabel => 'Content Pillar';
+
+  @override
+  String get createIdeaCountLabel => 'Idea Count';
+
+  @override
+  String createIdeaCountValue(int count) {
+    return '$count ideas';
+  }
+
+  @override
+  String get createIdeaMissingPillar => 'Please choose a content pillar.';
+
+  @override
+  String get createIdeaLoadingLabel => 'Crafting Ideas...';
+
+  @override
+  String get createIdeaGenerateButton => 'Generate Ideas';
+
+  @override
+  String get strategyTitle => 'Brand Strategy';
 
   @override
   String get strategyIncompleteTitle =>
@@ -480,6 +512,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get monetizationTitle => 'Monetization';
+
+  @override
+  String get monetizationYourAnswerLabel => 'Your answer';
+
+  @override
+  String get monetizationAiSuggestionsLabel => 'AI suggestions';
 
   @override
   String get ikigaiAnswersTitle => 'Ikigai Answers';

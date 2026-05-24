@@ -72,6 +72,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get logOut => 'Keluar';
 
   @override
+  String get logoutConfirmTitle => 'Keluar?';
+
+  @override
+  String get logoutConfirmBody =>
+      'Apakah Anda yakin ingin keluar dari akun ini?';
+
+  @override
+  String get logoutConfirmCancel => 'Batal';
+
+  @override
+  String get logoutConfirmAction => 'Keluar';
+
+  @override
   String get madeWithLove => 'Dibuat dengan ❤️ untuk Skripsi';
 
   @override
@@ -450,11 +463,30 @@ class AppLocalizationsId extends AppLocalizations {
   String get contentEmptyBody => 'Buat ide terlebih dahulu, lalu buat script.';
 
   @override
-  String get strategyTitle => 'Strategi Brand';
+  String get createIdeaSheetTitle => 'Apa yang ingin kamu buat?';
 
   @override
-  String get strategySubtitle =>
-      'Tinjau positioning, Ikigai, SWOT, dan content pillar Anda dalam satu tempat.';
+  String get createIdeaPillarLabel => 'Pilih Pilar Konten';
+
+  @override
+  String get createIdeaCountLabel => 'Jumlah Ide';
+
+  @override
+  String createIdeaCountValue(int count) {
+    return '$count ide';
+  }
+
+  @override
+  String get createIdeaMissingPillar => 'Harap pilih pilar konten.';
+
+  @override
+  String get createIdeaLoadingLabel => 'Meracik Ide...';
+
+  @override
+  String get createIdeaGenerateButton => 'Buat Ide';
+
+  @override
+  String get strategyTitle => 'Strategi Brand';
 
   @override
   String get strategyIncompleteTitle => 'Strategi brand Anda belum lengkap.';
@@ -483,6 +515,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get monetizationTitle => 'Monetisasi';
+
+  @override
+  String get monetizationYourAnswerLabel => 'Jawaban Anda';
+
+  @override
+  String get monetizationAiSuggestionsLabel => 'Saran AI';
 
   @override
   String get ikigaiAnswersTitle => 'Jawaban Ikigai';

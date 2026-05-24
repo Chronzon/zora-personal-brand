@@ -12,6 +12,7 @@ class BrandProfile {
   final String opportunities;
   final String threats;
 
+  final List<String> monetizationOptions;
   final List<String> contentPillars;
 
   BrandProfile({
@@ -25,6 +26,7 @@ class BrandProfile {
     this.weaknesses = '',
     this.opportunities = '',
     this.threats = '',
+    this.monetizationOptions = const [],
     this.contentPillars = const [],
   });
 
@@ -39,6 +41,7 @@ class BrandProfile {
     String? weaknesses,
     String? opportunities,
     String? threats,
+    List<String>? monetizationOptions,
     List<String>? contentPillars,
   }) {
     return BrandProfile(
@@ -52,6 +55,7 @@ class BrandProfile {
       weaknesses: weaknesses ?? this.weaknesses,
       opportunities: opportunities ?? this.opportunities,
       threats: threats ?? this.threats,
+      monetizationOptions: monetizationOptions ?? this.monetizationOptions,
       contentPillars: contentPillars ?? this.contentPillars,
     );
   }
@@ -68,6 +72,8 @@ class BrandProfile {
       weaknesses: json['weaknesses'] ?? '',
       opportunities: json['opportunities'] ?? '',
       threats: json['threats'] ?? '',
+      monetizationOptions:
+          List<String>.from(json['monetization_options'] ?? []),
       contentPillars: List<String>.from(json['content_pillars'] ?? []),
     );
   }
@@ -84,6 +90,7 @@ class BrandProfile {
       'weaknesses': weaknesses,
       'opportunities': opportunities,
       'threats': threats,
+      'monetization_options': monetizationOptions,
       'content_pillars': contentPillars,
     };
   }

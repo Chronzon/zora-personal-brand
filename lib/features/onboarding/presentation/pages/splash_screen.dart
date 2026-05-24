@@ -21,12 +21,21 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSessionAndNavigate() async {
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
     final authProvider = context.read<AuthProvider>();
-    await authProvider.restoreSession();
+    final oauthError = _oauthCallbackValue('auth_error');
+    final oauthToken = _oauthCallbackValue('auth_token');
+
+    if (oauthError != null && oauthError.isNotEmpty) {
+      authProvider.setExternalAuthError(oauthError);
+    } else if (oauthToken != null && oauthToken.isNotEmpty) {
+      await authProvider.completeOAuthSession(oauthToken);
+    } else {
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!mounted) return;
+
+      await authProvider.restoreSession();
+    }
 
     if (!mounted) return;
 
@@ -51,6 +60,23 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
     }
+  }
+
+  String? _oauthCallbackValue(String key) {
+    final uri = Uri.base;
+    final queryValue = uri.queryParameters[key];
+    if (queryValue != null) return queryValue;
+
+    final fragment = uri.fragment;
+    if (fragment.isEmpty) return null;
+
+    final queryStart = fragment.indexOf('?');
+    if (queryStart == -1 || queryStart == fragment.length - 1) {
+      return null;
+    }
+
+    final params = Uri.splitQueryString(fragment.substring(queryStart + 1));
+    return params[key];
   }
 
   @override

@@ -107,6 +107,48 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmSignOut({
+    required BuildContext context,
+    required AppLocalizations l10n,
+    required AuthProvider authProvider,
+  }) async {
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.logoutConfirmTitle),
+          content: Text(l10n.logoutConfirmBody),
+          actions: [
+            TextButton(
+              autofocus: true,
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.logoutConfirmCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red.shade600,
+              ),
+              child: Text(l10n.logoutConfirmAction),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSignOut != true || !context.mounted) {
+      return;
+    }
+
+    await authProvider.signOut();
+    if (context.mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const SplashScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   Widget _buildLanguageOption({
     required BuildContext context,
     required String label,
@@ -181,12 +223,20 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.read<AuthProvider>();
+    final authProvider = context.watch<AuthProvider>();
     final onboardingProvider = context.watch<OnboardingProvider>();
     final localeProvider = context.watch<LocaleProvider>();
     final user = onboardingProvider.userProfile;
     final l10n = AppLocalizations.of(context)!;
     final isGuest = authProvider.currentUser?.isAnonymous ?? false;
+
+    if (!isGuest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.read<AuthProvider>().loadGoogleConnection();
+        }
+      });
+    }
 
     return Scaffold(
       backgroundColor: _backgroundColor,
@@ -572,7 +622,92 @@ class SettingsScreen extends StatelessWidget {
           ),
           onTap: () {},
         ),
+        const SizedBox(height: 12),
+        _buildGoogleConnectionTile(context),
       ],
+    );
+  }
+
+  Widget _buildGoogleConnectionTile(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final connection = authProvider.googleConnection;
+    final isLoading = authProvider.isGoogleConnectionLoading;
+    final isConnected = connection?.connected ?? false;
+    final connectedEmail = connection?.email;
+
+    if (isLoading && connection == null) {
+      return _buildSettingsTile(
+        icon: Icons.account_circle_outlined,
+        title: _copy(
+          context,
+          id: 'Memeriksa Google',
+          en: 'Checking Google',
+        ),
+        subtitle: _copy(
+          context,
+          id: 'Memuat status koneksi akun',
+          en: 'Loading account connection status',
+        ),
+        trailing: const SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        onTap: () {},
+      );
+    }
+
+    if (isConnected) {
+      return _buildSettingsTile(
+        icon: Icons.account_circle_rounded,
+        title: _copy(
+          context,
+          id: 'Google Terhubung',
+          en: 'Google Connected',
+        ),
+        subtitle: connectedEmail ??
+            _copy(
+              context,
+              id: 'Akun Google sudah terhubung',
+              en: 'Google account is connected',
+            ),
+        iconBackgroundColor: Colors.green.withValues(alpha: 0.08),
+        iconColor: Colors.green.shade700,
+        trailing: Icon(
+          Icons.check_circle_rounded,
+          color: Colors.green.shade600,
+          size: 24,
+        ),
+        onTap: () {},
+      );
+    }
+
+    return _buildSettingsTile(
+      icon: Icons.account_circle_outlined,
+      title: _copy(
+        context,
+        id: 'Hubungkan Google',
+        en: 'Connect Google',
+      ),
+      subtitle: _copy(
+        context,
+        id: 'Gunakan akun Google untuk login berikutnya',
+        en: 'Use your Google account for future logins',
+      ),
+      onTap: () => _connectGoogle(context),
+    );
+  }
+
+  Future<void> _connectGoogle(BuildContext context) async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.connectGoogle();
+
+    if (!context.mounted || success || authProvider.errorMessage == null) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(authProvider.errorMessage!)),
     );
   }
 
@@ -681,15 +816,11 @@ class SettingsScreen extends StatelessWidget {
         iconColor: Colors.red.shade600,
         titleColor: Colors.red.shade600,
         trailing: _buildChevron(color: Colors.red.shade300),
-        onTap: () async {
-          await authProvider.signOut();
-          if (context.mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const SplashScreen()),
-              (route) => false,
-            );
-          }
-        },
+        onTap: () => _confirmSignOut(
+          context: context,
+          l10n: l10n,
+          authProvider: authProvider,
+        ),
       ),
     );
   }

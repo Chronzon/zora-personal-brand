@@ -44,10 +44,9 @@ class PromptBuilder
     {
         $fullName = $this->stringValue($payload, 'fullName', 'Personal');
         $paidForText = $this->stringValue($payload, 'whatICanBePaidFor');
+        $paidForContext = $this->monetizationContext($paidForText, $language);
 
         if ($this->isEnglish($language)) {
-            $paidForText = $paidForText !== '' ? $paidForText : 'I am not sure yet, please help me discover possible monetization opportunities.';
-
             return <<<PROMPT
 {$systemInstruction}
 My name is: {$fullName}
@@ -57,28 +56,31 @@ I want to find the best niche that fits my Ikigai so I can build an authentic an
 What I Love: {$this->stringValue($payload, 'whatILove')}
 What I'm Good At: {$this->stringValue($payload, 'whatImGoodAt')}
 What The World Needs: {$this->stringValue($payload, 'whatTheWorldNeeds')}
-What I Can Be Paid For: {$paidForText}
+What I Can Be Paid For (user's original answer, context only): {$paidForContext}
 
 Your task is to provide separate personal branding strategy options so the user can choose their own combination.
 
 IMPORTANT:
-Return ONLY one valid JSON object with these 3 separate arrays:
+Return ONLY one valid JSON object with these 4 separate arrays:
 1. `categories`: 5 relevant industry category recommendations.
 2. `niches`: 5 micro-niche recommendations with very short phrases.
 3. `profile_names`: 5 profile names followed by a 2-word niche. Do not add anything else.
+4. `monetization_options`: 5 monetization suggestions inferred from the full Ikigai context.
+
+The user's `What I Can Be Paid For` answer is context only. Do not rewrite it, refine it, or treat it as a final value.
+If that answer is blank or weak such as "idk", "not sure", "can you help", or "tidak tahu", ignore it and infer `monetization_options` from the other Ikigai answers.
 
 REQUIRED JSON FORMAT:
 {
   "categories": ["Category A", "Category B", "Category C", "Category D", "Category E"],
   "niches": ["Micro-Niche 1", "Micro-Niche 2", "Micro-Niche 3", "Micro-Niche 4", "Micro-Niche 5"],
-  "profile_names": ["{$fullName} | Niche 1", "{$fullName} | Niche 2", "{$fullName} | Niche 3", "{$fullName} | Niche 4", "{$fullName} | Niche 5"]
+  "profile_names": ["{$fullName} | Niche 1", "{$fullName} | Niche 2", "{$fullName} | Niche 3", "{$fullName} | Niche 4", "{$fullName} | Niche 5"],
+  "monetization_options": ["Suggestion 1", "Suggestion 2", "Suggestion 3", "Suggestion 4", "Suggestion 5"]
 }
 
 IMPORTANT: Do not add any text outside the JSON object. Make sure each array contains exactly 5 items.
 PROMPT;
         }
-
-        $paidForText = $paidForText !== '' ? $paidForText : 'Aku masih belum tau, tolong dibantu menemukan jawaban untuk peluang monetisasinya';
 
         return <<<PROMPT
 {$systemInstruction}
@@ -89,21 +91,26 @@ Saya ingin menemukan niche terbaik yang sesuai dengan Ikigai saya agar saya bisa
 What I Love: {$this->stringValue($payload, 'whatILove')}
 What I'm Good At: {$this->stringValue($payload, 'whatImGoodAt')}
 What The World Needs: {$this->stringValue($payload, 'whatTheWorldNeeds')}
-What I Can Be Paid For: {$paidForText}
+What I Can Be Paid For (jawaban asli user, hanya sebagai konteks): {$paidForContext}
 
 Tugas Anda adalah memberikan opsi strategi personal branding yang terpisah agar user bisa memilih sendiri kombinasinya.
 
 PENTING:
-Berikan output HANYA dalam format JSON Object tunggal dengan 3 array terpisah di dalamnya:
+Berikan output HANYA dalam format JSON Object tunggal dengan 4 array terpisah di dalamnya:
 1. `categories`: 5 rekomendasi kategori industri yang relevan.
 2. `niches`: 5 rekomendasi micro-niche dengan kalimat super singkat.
 3. `profile_names`: 5 nama profil diikuti 2 kata niche TIDAK BOLEH DITAMBAH APA PUN.
+4. `monetization_options`: 5 saran monetisasi yang disimpulkan dari keseluruhan konteks Ikigai.
+
+Jawaban `What I Can Be Paid For` dari user hanya boleh dipakai sebagai konteks. Jangan tulis ulang, jangan refine, dan jangan anggap sebagai nilai final.
+Jika jawaban itu kosong atau lemah seperti "idk", "not sure", "can you help", atau "tidak tahu", abaikan jawaban tersebut dan simpulkan `monetization_options` dari jawaban Ikigai lainnya.
 
 CONTOH FORMAT JSON YANG WAJIB DIIKUTI:
 {
   "categories": ["Kategori A", "Kategori B", "Kategori C", "Kategori D", "Kategori E"],
   "niches": ["Micro-Niche 1", "Micro-Niche 2", "Micro-Niche 3", "Micro-Niche 4", "Micro-Niche 5"],
-  "profile_names": ["{$fullName} | Niche 1", "{$fullName} | Niche 2", "{$fullName} | Niche 3", "{$fullName} | Niche 4", "{$fullName} | Niche 5"]
+  "profile_names": ["{$fullName} | Niche 1", "{$fullName} | Niche 2", "{$fullName} | Niche 3", "{$fullName} | Niche 4", "{$fullName} | Niche 5"],
+  "monetization_options": ["Saran 1", "Saran 2", "Saran 3", "Saran 4", "Saran 5"]
 }
 
 PENTING: Jangan tambahkan teks lain selain JSON di atas. Pastikan setiap array berisi tepat 5 item.
@@ -423,5 +430,45 @@ PROMPT;
         }
 
         return $default;
+    }
+
+    private function monetizationContext(string $paidForText, string $language): string
+    {
+        $paidForText = trim($paidForText);
+
+        if ($paidForText === '' || $this->isWeakMonetizationText($paidForText)) {
+            return $this->isEnglish($language)
+                ? '[blank or weak answer; ignore this field and infer monetization from the other Ikigai answers]'
+                : '[jawaban kosong atau lemah; abaikan field ini dan simpulkan monetisasi dari jawaban Ikigai lainnya]';
+        }
+
+        return $paidForText;
+    }
+
+    private function isWeakMonetizationText(string $text): bool
+    {
+        $normalized = strtolower(trim($text));
+        $normalized = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $normalized) ?? $normalized;
+        $normalized = preg_replace('/\s+/', ' ', $normalized) ?? $normalized;
+
+        return in_array($normalized, [
+            'idk',
+            'i dont know',
+            'i don t know',
+            'i do not know',
+            'not sure',
+            'unsure',
+            'can you help',
+            'please help',
+            'help me',
+            'tidak tahu',
+            'nggak tahu',
+            'gak tahu',
+            'ga tahu',
+            'belum tahu',
+            'kurang tahu',
+            'bantu saya',
+            'tolong bantu',
+        ], true);
     }
 }
