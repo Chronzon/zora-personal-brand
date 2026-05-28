@@ -110,18 +110,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.auto_awesome,
-                                  size: 100, color: Colors.white),
-                              const SizedBox(height: 24),
-                              Text(
-                                "Zora",
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                              Image.asset(
+                                'assets/images/zora_mark.png',
+                                width: 160,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.high,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Text(
+                                  'Zora',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 28),
                               Text(
                                 "Bangun Personal Branding Anda\ndengan Kekuatan AI",
                                 textAlign: TextAlign.center,
@@ -192,6 +196,25 @@ class _LoginScreenState extends State<LoginScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Image.asset(
+              'assets/images/zora_mark.png',
+              width: 72,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (context, error, stackTrace) => Text(
+                'Zora',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+
           // 1. Header Animasi
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
