@@ -81,19 +81,46 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.auto_awesome, size: 80, color: Color(0xFF8A53FF)),
-            SizedBox(height: 24),
-            CircularProgressIndicator(color: Color(0xFF8A53FF)),
-            SizedBox(height: 16),
-            Text("Menyiapkan Ruang Kerja Anda...",
-                style: TextStyle(color: Colors.grey)),
-          ],
+      body: SafeArea(
+        child: Center(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final logoWidth = constraints.maxWidth < 420 ? 132.0 : 156.0;
+
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/zora_mark.png',
+                    width: logoWidth,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.auto_awesome,
+                      size: 80,
+                      color: Color(0xFF8A53FF),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF8A53FF),
+                      strokeWidth: 2.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Menyiapkan Ruang Kerja Anda...",
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

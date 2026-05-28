@@ -281,70 +281,64 @@ class _HomeTabState extends State<HomeTab> {
                   itemCount: min(contentProvider.generatedScripts.length, 3),
                   itemBuilder: (context, index) {
                     final script = contentProvider.generatedScripts[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Material(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade100),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade200,
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      child: ListTile(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ScriptDetailScreen(script: script),
+                        shadowColor: Colors.grey.shade200,
+                        elevation: 1,
+                        child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ScriptDetailScreen(script: script),
+                              ),
+                            );
+                          },
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          leading: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: purpleColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                          );
-                        },
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        leading: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: purpleColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
+                            child: const Icon(Icons.article_outlined,
+                                color: purpleColor, size: 20),
                           ),
-                          child: const Icon(Icons.article_outlined,
-                              color: purpleColor, size: 20),
-                        ),
-                        title: Text(
-                          script.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                          title: Text(
+                            script.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Row(
-                            children: [
-                              Flexible(
-                                child:
-                                    _buildMiniTag(script.platform, Colors.blue),
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: _buildMiniTag(
-                                  _cleanPillarName(script.pillar),
-                                  Colors.orange,
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: _buildMiniTag(
+                                      script.platform, Colors.blue),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: _buildMiniTag(
+                                    _cleanPillarName(script.pillar),
+                                    Colors.orange,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                          trailing: const Icon(Icons.arrow_forward_ios,
+                              size: 14, color: Colors.grey),
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios,
-                            size: 14, color: Colors.grey),
                       ),
                     );
                   },

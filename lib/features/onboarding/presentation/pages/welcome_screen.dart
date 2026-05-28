@@ -52,7 +52,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 children: [
-                  const Icon(Icons.auto_awesome, color: purpleColor, size: 22),
+                  Image.asset(
+                    'assets/images/zora_mark.png',
+                    width: 28,
+                    height: 28,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.auto_awesome,
+                      color: purpleColor,
+                      size: 22,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     l10n.appName,

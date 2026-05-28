@@ -781,6 +781,29 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 10),
           _buildSettingsTile(
             icon: Icons.info_outline_rounded,
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                'assets/images/zora_mark.png',
+                width: 42,
+                height: 42,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: _purpleColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: _purpleColor,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
             title: l10n.aboutApp,
             subtitle: 'Personal Branding - Zora',
             trailing: Text(
@@ -845,6 +868,7 @@ class SettingsScreen extends StatelessWidget {
     required VoidCallback onTap,
     String? subtitle,
     Widget? trailing,
+    Widget? leading,
     Color? iconBackgroundColor,
     Color? iconColor,
     Color? titleColor,
@@ -863,12 +887,13 @@ class SettingsScreen extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _buildIconBubble(
-                icon: icon,
-                backgroundColor:
-                    iconBackgroundColor ?? _purpleColor.withValues(alpha: 0.08),
-                iconColor: iconColor ?? _purpleColor,
-              ),
+              leading ??
+                  _buildIconBubble(
+                    icon: icon,
+                    backgroundColor: iconBackgroundColor ??
+                        _purpleColor.withValues(alpha: 0.08),
+                    iconColor: iconColor ?? _purpleColor,
+                  ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
