@@ -276,12 +276,6 @@ class SettingsScreen extends StatelessWidget {
                                     onboardingProvider: onboardingProvider,
                                     isGuest: isGuest,
                                   ),
-                                  const SizedBox(height: 18),
-                                  _buildActionSection(
-                                    context: context,
-                                    l10n: l10n,
-                                    authProvider: authProvider,
-                                  ),
                                 ],
                               ),
                             ),
@@ -296,7 +290,11 @@ class SettingsScreen extends StatelessWidget {
                                     localeProvider: localeProvider,
                                   ),
                                   const SizedBox(height: 18),
-                                  _buildSupportSection(context, l10n),
+                                  _buildActionSection(
+                                    context: context,
+                                    l10n: l10n,
+                                    authProvider: authProvider,
+                                  ),
                                 ],
                               ),
                             ),
@@ -319,8 +317,6 @@ class SettingsScreen extends StatelessWidget {
                               localeProvider: localeProvider,
                             ),
                             const SizedBox(height: 18),
-                            _buildSupportSection(context, l10n),
-                            const SizedBox(height: 18),
                             _buildActionSection(
                               context: context,
                               l10n: l10n,
@@ -328,7 +324,9 @@ class SettingsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
+                      _buildBrandFooter(),
+                      const SizedBox(height: 14),
                       Center(
                         child: Text(
                           l10n.madeWithLove,
@@ -612,17 +610,6 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _buildSettingsTile(
-          icon: Icons.person_outline_rounded,
-          title: l10n.editProfile,
-          subtitle: _copy(
-            context,
-            id: 'Perbarui identitas dan foto profil',
-            en: 'Update identity and profile photo',
-          ),
-          onTap: () {},
-        ),
-        const SizedBox(height: 12),
         _buildGoogleConnectionTile(context),
       ],
     );
@@ -653,7 +640,6 @@ class SettingsScreen extends StatelessWidget {
           height: 18,
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
-        onTap: () {},
       );
     }
 
@@ -678,7 +664,6 @@ class SettingsScreen extends StatelessWidget {
           color: Colors.green.shade600,
           size: 24,
         ),
-        onTap: () {},
       );
     }
 
@@ -730,92 +715,6 @@ class SettingsScreen extends StatelessWidget {
             onTap: () => _showLanguageSheet(context),
           ),
           const SizedBox(height: 10),
-          _buildSettingsTile(
-            icon: Icons.dark_mode_outlined,
-            title: l10n.darkMode,
-            subtitle: _copy(
-              context,
-              id: 'Belum tersedia',
-              en: 'Coming soon',
-            ),
-            trailing: const Switch(
-              value: false,
-              onChanged: null,
-              activeThumbColor: _purpleColor,
-            ),
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSupportSection(BuildContext context, AppLocalizations l10n) {
-    return _SettingsCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionLabel(l10n.supportSection),
-          const SizedBox(height: 12),
-          _buildSettingsTile(
-            icon: Icons.help_outline_rounded,
-            title: l10n.helpFaq,
-            subtitle: _copy(
-              context,
-              id: 'Panduan penggunaan aplikasi',
-              en: 'Guides for using the app',
-            ),
-            onTap: () {},
-          ),
-          const SizedBox(height: 10),
-          _buildSettingsTile(
-            icon: Icons.privacy_tip_outlined,
-            title: l10n.privacyPolicy,
-            subtitle: _copy(
-              context,
-              id: 'Lihat kebijakan data dan privasi',
-              en: 'Review data and privacy policy',
-            ),
-            onTap: () {},
-          ),
-          const SizedBox(height: 10),
-          _buildSettingsTile(
-            icon: Icons.info_outline_rounded,
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/images/zora_mark.png',
-                width: 42,
-                height: 42,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: _purpleColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: _purpleColor,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ),
-            title: l10n.aboutApp,
-            subtitle: 'Personal Branding - Zora',
-            trailing: Text(
-              'v1.0.0',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: Colors.grey.shade500,
-              ),
-            ),
-            onTap: () {},
-          ),
         ],
       ),
     );
@@ -865,7 +764,7 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildSettingsTile({
     required IconData icon,
     required String title,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
     String? subtitle,
     Widget? trailing,
     Widget? leading,
@@ -927,7 +826,10 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              trailing ?? _buildChevron(),
+              if (trailing != null)
+                trailing
+              else if (onTap != null)
+                _buildChevron(),
             ],
           ),
         ),
@@ -984,6 +886,64 @@ class SettingsScreen extends StatelessWidget {
       Icons.arrow_forward_ios_rounded,
       size: 14,
       color: color ?? Colors.grey.shade400,
+    );
+  }
+
+  Widget _buildBrandFooter() {
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              'assets/images/zora_mark.png',
+              width: 34,
+              height: 34,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _purpleColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: _purpleColor,
+                  size: 18,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Zora',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  color: _darkColor,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'v1.0.0',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
