@@ -290,20 +290,55 @@ Protected endpoint membutuhkan token Bearer.
 
 ## 11. Data Model
 
+Database utama aplikasi menggunakan MySQL melalui Laravel Eloquent ORM. Source of truth untuk struktur database saat ini adalah migration di `laravel-backend/database/migrations/`. File `supabase_schema.sql` bersifat historis dan tidak digunakan sebagai acuan utama versi Laravel + MySQL saat ini.
+
+Semua data penting aplikasi disimpan berdasarkan `users.id`. Email dan Google account hanya dipakai sebagai identitas login, bukan sebagai primary reference untuk data personal branding.
+
+### 11.1 Database Relationship Overview
+
+```text
+users
+├── user_profiles        one-to-one
+├── brand_profiles       one-to-one
+├── social_accounts      one-to-many
+├── onboarding_answers   one-to-many
+├── content_ideas        one-to-many
+└── generated_scripts    one-to-many
+```
+
+Relationship detail:
+
+- `users.id` menjadi primary key utama untuk customer.
+- `user_profiles.user_id` adalah foreign key ke `users.id` dan bersifat unique, sehingga satu user hanya memiliki satu user profile.
+- `brand_profiles.user_id` adalah foreign key ke `users.id` dan bersifat unique, sehingga satu user hanya memiliki satu brand profile.
+- `social_accounts.user_id` adalah foreign key ke `users.id`, digunakan untuk menyimpan koneksi OAuth seperti Google.
+- `onboarding_answers.user_id` adalah foreign key ke `users.id`, digunakan untuk menyimpan progress onboarding per step.
+- `content_ideas.user_id` adalah foreign key ke `users.id`, digunakan untuk menyimpan ide konten yang dihasilkan.
+- `generated_scripts.user_id` adalah foreign key ke `users.id`, digunakan untuk menyimpan riwayat script yang dihasilkan.
+- Semua foreign key utama menggunakan `cascadeOnDelete`, sehingga data turunan user ikut terhapus jika user dihapus.
+
+### 11.2 Table Structure
+
 ### users
 
 Purpose: menyimpan akun customer utama.
 
 Key fields:
 
-- `id`
-- `name`
-- `email`
-- `email_verified_at`
-- `password`
-- `api_token`
-- `created_at`
-- `updated_at`
+- `id` bigint unsigned primary key
+- `name` string
+- `email` string unique
+- `email_verified_at` timestamp nullable
+- `password` string
+- `api_token` string nullable unique
+- `remember_token` string nullable
+- `created_at` timestamp
+- `updated_at` timestamp
+
+Notes:
+
+- `api_token` disimpan dalam bentuk hash dan digunakan untuk bearer token authentication.
+- Guest account tetap disimpan sebagai row di `users` dengan email format `guest-<uuid>@local.test`.
 
 ### social_accounts
 
@@ -311,18 +346,24 @@ Purpose: menyimpan metode login OAuth seperti Google.
 
 Key fields:
 
-- `id`
-- `user_id`
-- `provider`
-- `provider_user_id`
-- `provider_email`
-- `created_at`
-- `updated_at`
+- `id` bigint unsigned primary key
+- `user_id` foreign key ke `users.id`
+- `provider` string
+- `provider_user_id` string
+- `provider_email` string nullable
+- `created_at` timestamp
+- `updated_at` timestamp
 
 Constraints:
 
 - unique `provider + provider_user_id`
 - unique `user_id + provider`
+- cascade delete ketika user dihapus
+
+Notes:
+
+- Untuk Google Sign-In, `provider` bernilai `google`.
+- Tabel ini memastikan satu user dapat memiliki koneksi Google tanpa membuat duplikasi user baru.
 
 ### user_profiles
 
@@ -330,15 +371,25 @@ Purpose: menyimpan data personal discovery customer.
 
 Key fields:
 
-- `id`
-- `user_id`
-- `full_name`
-- `what_i_love`
-- `what_im_good_at`
-- `what_the_world_needs`
-- `what_i_can_be_paid_for`
-- `created_at`
-- `updated_at`
+- `id` bigint unsigned primary key
+- `user_id` foreign key ke `users.id`, unique
+- `full_name` string nullable
+- `what_i_love` text nullable
+- `what_im_good_at` text nullable
+- `what_the_world_needs` text nullable
+- `what_i_can_be_paid_for` text nullable
+- `created_at` timestamp
+- `updated_at` timestamp
+
+Constraints:
+
+- unique `user_id`
+- cascade delete ketika user dihapus
+
+Notes:
+
+- Tabel ini menyimpan jawaban asli user pada tahap Ikigai atau identity finder.
+- `what_i_can_be_paid_for` boleh kosong atau berisi jawaban lemah seperti `idk`.
 
 ### brand_profiles
 
@@ -346,22 +397,34 @@ Purpose: menyimpan hasil positioning personal brand dan AI suggestions yang dite
 
 Key fields:
 
-- `id`
-- `user_id`
-- `selected_profile_name`
-- `selected_category`
-- `selected_micro_niche`
-- `selected_premise`
-- `tone_of_voice`
-- `target_audience`
-- `strengths`
-- `weaknesses`
-- `opportunities`
-- `threats`
-- `monetization_options`
-- `content_pillars`
-- `created_at`
-- `updated_at`
+- `id` bigint unsigned primary key
+- `user_id` foreign key ke `users.id`, unique
+- `selected_profile_name` string nullable
+- `selected_category` string nullable
+- `selected_micro_niche` string nullable
+- `selected_premise` text nullable
+- `tone_of_voice` string nullable
+- `target_audience` text nullable
+- `strengths` text nullable
+- `weaknesses` text nullable
+- `opportunities` text nullable
+- `threats` text nullable
+- `monetization_options` json nullable
+- `content_pillars` json nullable
+- `created_at` timestamp
+- `updated_at` timestamp
+
+Constraints:
+
+- unique `user_id`
+- cascade delete ketika user dihapus
+
+Notes:
+
+- Tabel ini menyimpan hasil pilihan user yang sudah diterima dari proses onboarding.
+- `monetization_options` menyimpan list saran monetisasi dari AI.
+- `content_pillars` menyimpan list content pillar yang diterima user.
+- Onboarding dianggap completed di frontend ketika `content_pillars` sudah terisi.
 
 ### onboarding_answers
 
@@ -369,19 +432,45 @@ Purpose: menyimpan accepted onboarding answer per step beserta metadata AI.
 
 Key fields:
 
-- `id`
-- `user_id`
-- `onboarding_step`
-- `selected_answer`
-- `source`
-- `model_provider`
-- `model_name`
-- `created_at`
-- `updated_at`
+- `id` bigint unsigned primary key
+- `user_id` foreign key ke `users.id`
+- `onboarding_step` string
+- `selected_answer` json
+- `source` string
+- `model_provider` string nullable
+- `model_name` string nullable
+- `completed_at` timestamp
+- `created_at` timestamp
+- `updated_at` timestamp
 
 Constraint:
 
 - unique `user_id + onboarding_step`
+- cascade delete ketika user dihapus
+
+Allowed `onboarding_step` values:
+
+- `user_profile`
+- `profile_name`
+- `category`
+- `micro_niche`
+- `swot`
+- `premise`
+- `tone_audience`
+- `content_pillars`
+
+Allowed `source` values:
+
+- `manual`
+- `primary_ai`
+- `fallback_ai`
+- `default`
+
+Notes:
+
+- `selected_answer` menyimpan data pilihan user dalam bentuk JSON per step.
+- `model_provider` dan `model_name` dipakai untuk mencatat metadata AI ketika jawaban berasal dari hasil AI.
+- Tabel ini membantu aplikasi melanjutkan onboarding dari progress yang sudah tersimpan.
 
 ### content_ideas
 
@@ -389,17 +478,26 @@ Purpose: menyimpan ide konten yang dihasilkan.
 
 Key fields:
 
-- `id`
-- `user_id`
-- `pillar`
-- `title`
-- `angle`
-- `content_overview`
-- `viral_potential`
-- `insight`
-- `platform`
-- `created_at`
-- `updated_at`
+- `id` bigint unsigned primary key
+- `user_id` foreign key ke `users.id`
+- `pillar` string nullable
+- `title` string nullable
+- `angle` text nullable
+- `content_overview` text nullable
+- `viral_potential` string nullable
+- `insight` text nullable
+- `platform` string default `Multi-Platform`
+- `created_at` timestamp
+- `updated_at` timestamp
+
+Constraints:
+
+- cascade delete ketika user dihapus
+
+Notes:
+
+- Data pada tabel ini berasal dari hasil parsing AI action `generate_ideas`.
+- Ide konten tetap user-scoped agar setiap customer hanya mengakses ide miliknya sendiri.
 
 ### generated_scripts
 
@@ -407,15 +505,34 @@ Purpose: menyimpan script hasil generate.
 
 Key fields:
 
-- `id`
-- `user_id`
-- `title`
-- `platform`
-- `script`
-- `original_idea_id`
-- `pillar`
-- `created_at`
-- `updated_at`
+- `id` bigint unsigned primary key
+- `user_id` foreign key ke `users.id`
+- `title` string
+- `platform` string default `Multi-Platform`
+- `script` longText
+- `original_idea_id` string nullable
+- `pillar` string nullable
+- `created_at` timestamp
+- `updated_at` timestamp
+
+Constraints:
+
+- cascade delete ketika user dihapus
+
+Notes:
+
+- Tabel ini menyimpan riwayat script yang ditampilkan pada dashboard atau content history.
+- Delete script harus memastikan script hanya dapat dihapus oleh pemilik `user_id` yang sama.
+
+### 11.3 Laravel Support Tables
+
+Laravel juga memiliki beberapa tabel pendukung bawaan:
+
+- `password_reset_tokens`: tabel bawaan Laravel untuk token reset password. Fitur password reset belum menjadi requirement aktif pada versi saat ini.
+- `sessions`: tabel bawaan Laravel untuk penyimpanan session. Autentikasi API aplikasi tetap menggunakan bearer token sederhana melalui `users.api_token`.
+- `cache`, `cache_locks`, `jobs`, `job_batches`, dan `failed_jobs`: tabel pendukung Laravel untuk cache dan queue jika digunakan oleh framework.
+
+Tabel pendukung tersebut bukan data utama personal branding, tetapi dapat tetap ada karena dibuat oleh migration bawaan Laravel.
 
 ## 12. Environment and Setup
 
